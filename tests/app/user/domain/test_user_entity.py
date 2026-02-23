@@ -1,26 +1,55 @@
 import pytest
-from app.user.domain.entity.user import User
+from app.user.domain.entity.user import User, Profile, UserStatus
 
-def test_user_entity_creation():
+def test_user_entity_creation_with_profile():
     # Given
-    email = "test@example.com"
-    nickname = "tester"
+    profile = Profile(
+        nickname="tester",
+        real_name="김테스트",
+        phone_number="010-1234-5678"
+    )
     
     # When
-    user = User(email=email, nickname=nickname)
+    user = User(
+        username="testuser",
+        password="hashed_password",
+        email="test@example.com",
+        profile=profile
+    )
     
     # Then
-    assert user.email == email
-    assert user.nickname == nickname
-    assert user.id is not None
-    assert user.is_active is True
+    assert user.username == "testuser"
+    assert user.profile.real_name == "김테스트"
+    assert user.status == UserStatus.ACTIVE
+    assert user.oauth_provider is None
 
-def test_user_update_nickname():
+def test_user_oauth_support():
     # Given
-    user = User(email="test@example.com", nickname="old")
+    profile = Profile(nickname="social_user", real_name="이사회")
     
     # When
-    user.update_nickname("new")
+    user = User(
+        username="kakao_12345",
+        password=None,
+        email="social@example.com",
+        profile=profile,
+        oauth_provider="kakao",
+        oauth_id="12345"
+    )
     
     # Then
-    assert user.nickname == "new"
+    assert user.password is None
+    assert user.oauth_provider == "kakao"
+    assert user.oauth_id == "12345"
+
+def test_user_soft_delete():
+    # Given
+    profile = Profile(nickname="del", real_name="삭제")
+    user = User(username="del_user", password="p", email="d@e.com", profile=profile)
+    
+    # When
+    user.delete()
+    
+    # Then
+    assert user.is_deleted is True
+    assert user.status == UserStatus.BLOCKED
