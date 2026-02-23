@@ -1,9 +1,10 @@
-from sqlalchemy import String, Boolean, Enum, BigInteger
-from sqlalchemy.orm import Mapped, mapped_column
-from core.db.mixins import Base
-from core.db.mixins import Base, TimestampMixin, OptimisticLockMixin
+from sqlalchemy import BigInteger, Enum, String
 from sqlalchemy.dialects.postgresql import UUID as PG_UUID
+from sqlalchemy.orm import Mapped, mapped_column
+
 from app.file.domain.entity.file import FileStatus
+from core.db.mixins import Base, OptimisticLockMixin, TimestampMixin
+
 
 class FileModel(Base, TimestampMixin, OptimisticLockMixin):
     __tablename__ = "files"
@@ -14,6 +15,4 @@ class FileModel(Base, TimestampMixin, OptimisticLockMixin):
     file_extension: Mapped[str] = mapped_column(String(10), nullable=False)
     file_size: Mapped[int] = mapped_column(BigInteger, nullable=False)
     mime_type: Mapped[str] = mapped_column(String(100), nullable=False)
-    status: Mapped[FileStatus] = mapped_column(
-        Enum(FileStatus), default=FileStatus.PENDING, nullable=False
-    )
+    status: Mapped[FileStatus] = mapped_column(Enum(FileStatus), default=FileStatus.PENDING, nullable=False)

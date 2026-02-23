@@ -1,9 +1,12 @@
 from abc import ABC, abstractmethod
-from typing import Generic, TypeVar, Sequence
+from collections.abc import Sequence
+from typing import Generic, TypeVar
 from uuid import UUID
+
 from core.common.entity import Entity
 
 T = TypeVar("T", bound=Entity)
+
 
 class BaseRepository(Generic[T], ABC):
     @abstractmethod

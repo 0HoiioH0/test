@@ -1,7 +1,10 @@
 from functools import wraps
+
 import stamina
 from sqlalchemy.orm.exc import StaleDataError
+
 from core.db.session import session
+
 
 def transactional(func):
     @wraps(func)
