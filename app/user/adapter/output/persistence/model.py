@@ -1,4 +1,4 @@
-from sqlalchemy import String, Boolean, Enum
+from sqlalchemy import String, Boolean, Enum, ForeignKey
 from sqlalchemy.orm import Mapped, mapped_column
 from core.db.session import Base
 from core.db.mixins import TimestampMixin, OptimisticLockMixin
@@ -17,7 +17,11 @@ class UserModel(Base, TimestampMixin, OptimisticLockMixin):
     nickname: Mapped[str] = mapped_column(String(100), nullable=False)
     real_name: Mapped[str] = mapped_column(String(100), nullable=False)
     phone_number: Mapped[Optional[str]] = mapped_column(String(20), nullable=True)
-    profile_image_id: Mapped[Optional[PG_UUID]] = mapped_column(PG_UUID(as_uuid=True), nullable=True)
+    profile_image_id: Mapped[Optional[PG_UUID]] = mapped_column(
+        PG_UUID(as_uuid=True), 
+        ForeignKey("files.id", ondelete="SET NULL"),
+        nullable=True
+    )
     
     status: Mapped[UserStatus] = mapped_column(
         Enum(UserStatus), default=UserStatus.ACTIVE, nullable=False
