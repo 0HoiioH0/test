@@ -1,8 +1,5 @@
 from enum import StrEnum
-
-class ValueObject:
-    """Base class for value objects."""
-    pass
+from core.common.value_object import ValueObject
 
 class TokenType(ValueObject, StrEnum):
     ACCESS = "access_token"
