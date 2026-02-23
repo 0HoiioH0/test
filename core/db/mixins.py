@@ -1,5 +1,5 @@
 from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column
-from sqlalchemy import DateTime, func
+from sqlalchemy import DateTime, func, Integer
 from datetime import datetime
 
 class Base(DeclarativeBase):
@@ -19,3 +19,11 @@ class TimestampMixin:
         onupdate=func.now(), 
         nullable=False
     )
+
+class OptimisticLockMixin:
+    """Mixin for optimistic locking using a version column."""
+    version_id: Mapped[int] = mapped_column(Integer, default=1, nullable=False)
+
+    __mapper_args__ = {
+        "version_id_col": version_id
+    }
