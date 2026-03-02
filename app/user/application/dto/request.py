@@ -1,5 +1,7 @@
+from pydantic import EmailStr, Field
+
 from core.common.request.base import BaseRequest
-from pydantic import Field, EmailStr
+
 
 class CreateUserRequest(BaseRequest):
     username: str = Field(..., min_length=4, max_length=50)

@@ -1,9 +1,12 @@
-from typing import Sequence
+from collections.abc import Sequence
+
 from sqlalchemy import select
+
 from app.user.domain.entity.user import User
 from app.user.domain.repository.user import UserRepository
-from core.db.sqlalchemy.models.user import user_table
 from core.db.session import session
+from core.db.sqlalchemy.models.user import user_table
+
 
 class UserPersistenceAdapter(UserRepository):
     async def save(self, user: User) -> User:

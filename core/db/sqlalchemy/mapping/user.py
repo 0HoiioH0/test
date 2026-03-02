@@ -1,6 +1,8 @@
 from app.user.domain.entity.user import User
 from core.db.sqlalchemy.models.user import user_table
+
 from .base import mapper_registry
+
 
 def init_user_mappers():
     mapper_registry.map_imperatively(

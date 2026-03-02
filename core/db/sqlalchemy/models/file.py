@@ -1,10 +1,11 @@
-from sqlalchemy import Column, String, BigInteger, Enum
+from sqlalchemy import BigInteger, Column, Enum, String
 from sqlalchemy.dialects.postgresql import UUID as PG_UUID
-from core.db.sqlalchemy.models.base import BaseTable, metadata
+
 from app.file.domain.entity.file import FileStatus
+from core.db.sqlalchemy.models.base import BaseTable, metadata
 
 file_table = BaseTable(
-    "files",
+    "t_file",
     metadata,
     Column("id", PG_UUID(as_uuid=True), primary_key=True),
     Column("file_name", String(255), nullable=False),

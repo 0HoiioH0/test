@@ -1,10 +1,11 @@
-from sqlalchemy import Column, String, Boolean, Enum, ForeignKey
+from sqlalchemy import Boolean, Column, Enum, ForeignKey, String
 from sqlalchemy.dialects.postgresql import UUID as PG_UUID
-from core.db.sqlalchemy.models.base import BaseTable, metadata
+
 from app.user.domain.entity.user import UserStatus
+from core.db.sqlalchemy.models.base import BaseTable, metadata
 
 user_table = BaseTable(
-    "users",
+    "t_user",
     metadata,
     Column("id", PG_UUID(as_uuid=True), primary_key=True),
     Column("username", String(50), unique=True, nullable=False),
