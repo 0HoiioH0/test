@@ -14,7 +14,7 @@ user_table = BaseTable(
     Column("nickname", String(100), nullable=False),
     Column("real_name", String(100), nullable=False),
     Column("phone_number", String(20), nullable=True),
-    Column("profile_image_id", PG_UUID(as_uuid=True), ForeignKey("files.id", ondelete="SET NULL"), nullable=True),
+    Column("profile_image_id", PG_UUID(as_uuid=True), ForeignKey("t_file.id", ondelete="SET NULL"), nullable=True),
     Column("status", Enum(UserStatus), nullable=False, default=UserStatus.ACTIVE),
     Column("is_deleted", Boolean, nullable=False, default=False),
     Column("oauth_provider", String(50), nullable=True),
