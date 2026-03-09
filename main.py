@@ -1,7 +1,5 @@
 import logging
 
-from fastapi.responses import ORJSONResponse
-
 from app.container import AppContainer
 from core.config import config, get_env
 from core.db.sqlalchemy import init_orm_mappers
@@ -29,7 +27,6 @@ def create_app() -> ExtendedFastAPI:
         docs_url=config.DOCS_URL,
         redoc_url=config.REDOC_URL,
         openapi_url=config.OPENAPI_URL,
-        default_response_class=ORJSONResponse,
     )
     app_.container = container
 

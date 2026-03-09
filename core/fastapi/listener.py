@@ -1,7 +1,7 @@
 from fastapi import Request
 from fastapi.encoders import jsonable_encoder
 from fastapi.exceptions import RequestValidationError
-from fastapi.responses import ORJSONResponse
+from fastapi.responses import JSONResponse
 from starlette import status
 
 from core.common.exceptions.base import CustomException
@@ -11,7 +11,7 @@ from core.fastapi import ExtendedFastAPI
 def register_exception_handlers(app: ExtendedFastAPI):
     @app.exception_handler(CustomException)
     async def custom_exception_handler(_: Request, exc: CustomException):
-        return ORJSONResponse(
+        return JSONResponse(
             status_code=exc.code,
             content={
                 "error_code": exc.error_code,
@@ -22,7 +22,7 @@ def register_exception_handlers(app: ExtendedFastAPI):
 
     @app.exception_handler(RequestValidationError)
     async def request_validation_exception_handler(_: Request, exc: RequestValidationError):
-        return ORJSONResponse(
+        return JSONResponse(
             status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
             content=jsonable_encoder(
                 {
