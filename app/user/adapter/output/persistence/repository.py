@@ -11,8 +11,8 @@ from core.db.sqlalchemy.models.user import user_table
 
 class UserPersistenceAdapter(UserRepository):
     async def save(self, user: User) -> User:
-        merged_user = await session.merge(user)
-        return merged_user
+        session.add(user)
+        return user
 
     async def get_by_id(self, id: Any) -> User | None:
         query = select(User).where(user_table.c.id == id, user_table.c.is_deleted.is_(False))
@@ -30,4 +30,4 @@ class UserPersistenceAdapter(UserRepository):
         return result.scalars().all()
 
     async def delete(self, user: User) -> None:
-        await session.merge(user)
+        session.add(user)

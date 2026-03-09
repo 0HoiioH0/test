@@ -9,8 +9,6 @@ from sqlalchemy.ext.asyncio import (
 
 from core.config import config
 
-# ContextVar to hold the session for each task/request
-# Provide a safe default to avoid LookupError in unit-test contexts.
 session_context: ContextVar[str] = ContextVar("session_context", default="global")
 
 
@@ -25,7 +23,6 @@ async_session_factory = async_sessionmaker(
     expire_on_commit=False,
 )
 
-# Scoped session for thread-safe/task-safe usage
 session = async_scoped_session(
     session_factory=async_session_factory,
     scopefunc=get_session_context,
