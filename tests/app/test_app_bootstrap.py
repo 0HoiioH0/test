@@ -10,6 +10,7 @@ def test_create_app_returns_extended_fastapi():
     assert app.title == config.APP_NAME
     assert app.env == config.ENV
     assert app.openapi_url == config.OPENAPI_URL
+    assert app.docs_url == config.DOCS_URL
 
 
 def test_app_registers_health_check_route():
