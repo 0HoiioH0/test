@@ -1,4 +1,5 @@
 from collections.abc import Sequence
+from typing import Any
 
 from sqlalchemy import select
 
@@ -13,18 +14,18 @@ class UserPersistenceAdapter(UserRepository):
         merged_user = await session.merge(user)
         return merged_user
 
-    async def get_by_id(self, id: any) -> User | None:
-        query = select(User).where(user_table.c.id == id, user_table.c.is_deleted == False)
+    async def get_by_id(self, id: Any) -> User | None:
+        query = select(User).where(user_table.c.id == id, user_table.c.is_deleted.is_(False))
         result = await session.execute(query)
-        return result.scalar_one_of_none()
+        return result.scalar_one_or_none()
 
     async def get_by_email(self, email: str) -> User | None:
-        query = select(User).where(user_table.c.email == email, user_table.c.is_deleted == False)
+        query = select(User).where(user_table.c.email == email, user_table.c.is_deleted.is_(False))
         result = await session.execute(query)
-        return result.scalar_one_of_none()
+        return result.scalar_one_or_none()
 
     async def list(self) -> Sequence[User]:
-        query = select(User).where(user_table.c.is_deleted == False)
+        query = select(User).where(user_table.c.is_deleted.is_(False))
         result = await session.execute(query)
         return result.scalars().all()
 

@@ -19,6 +19,9 @@ class Profile(ValueObject):
     phone_number: str | None = None
     profile_image_id: UUID | None = None
 
+    def __composite_values__(self) -> tuple[str, str, str | None, UUID | None]:
+        return self.nickname, self.real_name, self.phone_number, self.profile_image_id
+
 
 @dataclass
 class User(Entity):
