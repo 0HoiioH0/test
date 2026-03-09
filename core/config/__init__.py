@@ -6,38 +6,34 @@ from .base import CommonSettings
 from .dev import DevSettings
 from .local import LocalSettings
 from .prod import ProdSettings
-from .stage import StageSettings
 from .test import TestSettings
 
 Config = CommonSettings
 
 
 class Env(StrEnum):
-    LOCAL = "local"
-    DEV = "dev"
-    STAGE = "stage"
-    TEST = "test"
-    PROD = "prod"
+    prod = "prod"
+    dev = "dev"
+    local = "local"
+    test = "test"
 
 
 def get_env() -> Env:
-    value = os.getenv("ENV", Env.DEV.value)
+    value = os.getenv("ENVIRONMENT") or os.getenv("ENV") or Env.local.value
     return Env(value)
 
 
 @lru_cache
 def get_settings() -> CommonSettings:
     match get_env():
-        case Env.PROD:
+        case Env.prod:
             return ProdSettings()
-        case Env.STAGE:
-            return StageSettings()
-        case Env.TEST:
-            return TestSettings()
-        case Env.LOCAL:
-            return LocalSettings()
-        case _:
+        case Env.dev:
             return DevSettings()
+        case Env.test:
+            return TestSettings()
+        case _:
+            return LocalSettings()
 
 
 config = get_settings()
