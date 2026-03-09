@@ -1,6 +1,7 @@
 import pytest
 
 from app.user.application.dto.request import CreateUserRequest
+from app.user.application.exceptions.user import UserEmailAlreadyExistsException
 from app.user.application.service.user import UserService
 from app.user.domain.entity.user import User
 from app.user.domain.repository.user import UserRepository
@@ -64,5 +65,5 @@ async def test_create_user_duplicate_email():
 
     await service.create_user(req)
 
-    with pytest.raises(ValueError, match="Email already registered"):
+    with pytest.raises(UserEmailAlreadyExistsException):
         await service.create_user(req)
