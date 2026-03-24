@@ -21,7 +21,7 @@ def make_tokens() -> AuthTokensDTO:
     return AuthTokensDTO(
         user_id="11111111-1111-1111-1111-111111111111",
         organization_id="22222222-2222-2222-2222-222222222222",
-        organization_code="hansung",
+        organization_code="univ_hansung",
         role="student",
         access_token="access-token-value",
         refresh_token="refresh-token-value",
@@ -37,7 +37,7 @@ def test_login_sets_auth_cookies(client, monkeypatch):
     response = client.post(
         "/api/auth/login",
         json={
-            "organization_code": "hansung",
+            "organization_code": "univ_hansung",
             "login_id": "20260001",
             "password": "secure_password123",
         },
@@ -45,7 +45,7 @@ def test_login_sets_auth_cookies(client, monkeypatch):
 
     assert response.status_code == 200
     assert response.json()["data"]["authenticated"] is True
-    assert response.json()["data"]["organization_code"] == "hansung"
+    assert response.json()["data"]["organization_code"] == "univ_hansung"
     assert response.cookies.get("access_token") == "access-token-value"
     assert response.cookies.get("refresh_token") == "refresh-token-value"
 
@@ -59,7 +59,7 @@ def test_login_invalid_credentials_returns_401(client, monkeypatch):
     response = client.post(
         "/api/auth/login",
         json={
-            "organization_code": "hansung",
+            "organization_code": "univ_hansung",
             "login_id": "20260001",
             "password": "secure_password123",
         },
@@ -78,7 +78,7 @@ def test_login_provider_not_configured_returns_503(client, monkeypatch):
     response = client.post(
         "/api/auth/login",
         json={
-            "organization_code": "hansung",
+            "organization_code": "univ_hansung",
             "login_id": "20260001",
             "password": "secure_password123",
         },
@@ -100,7 +100,7 @@ def test_login_provider_unavailable_returns_503(client, monkeypatch):
     response = client.post(
         "/api/auth/login",
         json={
-            "organization_code": "hansung",
+            "organization_code": "univ_hansung",
             "login_id": "20260001",
             "password": "secure_password123",
         },

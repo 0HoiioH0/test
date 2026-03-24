@@ -79,8 +79,8 @@ async def db_session():
 async def test_save_and_get_organization(db_session):
     adapter = OrganizationSQLAlchemyRepository()
     organization = Organization(
-        code="hansung",
-        name="Hansung University",
+        code="univ_hansung",
+        name="한성대학교",
         auth_provider=OrganizationAuthProvider.HANSUNG_SIS,
     )
     organization.id = ORGANIZATION_ID
@@ -88,7 +88,7 @@ async def test_save_and_get_organization(db_session):
     await adapter.save(organization)
     await db_session.commit()
 
-    fetched_organization = await adapter.get_by_code("hansung")
+    fetched_organization = await adapter.get_by_code("univ_hansung")
 
     assert fetched_organization is not None
-    assert fetched_organization.name == "Hansung University"
+    assert fetched_organization.name == "한성대학교"

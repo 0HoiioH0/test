@@ -45,8 +45,8 @@ class InMemoryOrganizationRepository(OrganizationRepository):
 
 def make_organization() -> Organization:
     organization = Organization(
-        code="hansung",
-        name="Hansung University",
+        code="univ_hansung",
+        name="한성대학교",
         auth_provider=OrganizationAuthProvider.HANSUNG_SIS,
     )
     organization.id = HANSUNG_ID
@@ -62,7 +62,7 @@ async def test_list_organizations_returns_all_organizations():
     organizations = await service.list_organizations()
 
     assert len(organizations) == 1
-    assert organizations[0].code == "hansung"
+    assert organizations[0].code == "univ_hansung"
 
 
 @pytest.mark.asyncio
@@ -73,7 +73,7 @@ async def test_get_organization_returns_organization():
 
     organization = await service.get_organization(HANSUNG_ID)
 
-    assert organization.name == "Hansung University"
+    assert organization.name == "한성대학교"
 
 
 @pytest.mark.asyncio

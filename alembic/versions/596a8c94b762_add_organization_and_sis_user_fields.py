@@ -71,8 +71,8 @@ def upgrade() -> None:
                 version_id
             ) VALUES (
                 :id,
-                'hansung',
-                'Hansung University',
+                'univ_hansung',
+                '한성대학교',
                 'HANSUNG_SIS',
                 true,
                 NOW(),

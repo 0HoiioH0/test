@@ -138,8 +138,8 @@ class FakeOrganizationAuthService(OrganizationAuthService):
 
 def make_organization() -> Organization:
     organization = Organization(
-        code="hansung",
-        name="Hansung University",
+        code="univ_hansung",
+        name="한성대학교",
         auth_provider=OrganizationAuthProvider.HANSUNG_SIS,
     )
     organization.id = ORGANIZATION_ID
@@ -171,7 +171,7 @@ async def test_login_success_creates_user_and_stores_tokens():
 
     tokens = await service.login(
         LoginCommand(
-            organization_code="hansung",
+            organization_code="univ_hansung",
             login_id="20260001",
             password="secure_password123",
         )
@@ -188,7 +188,7 @@ async def test_login_success_creates_user_and_stores_tokens():
     )
 
     assert saved_user is not None
-    assert tokens.organization_code == "hansung"
+    assert tokens.organization_code == "univ_hansung"
     assert tokens.role == "student"
     assert stored_token == tokens.refresh_token
 
@@ -214,7 +214,7 @@ async def test_login_updates_existing_user_role():
 
     tokens = await service.login(
         LoginCommand(
-            organization_code="hansung",
+            organization_code="univ_hansung",
             login_id="20260001",
             password="secure_password123",
         )
@@ -261,7 +261,7 @@ async def test_login_identity_provider_not_configured_bubbles_up():
     with pytest.raises(AuthIdentityProviderNotConfiguredException):
         await service.login(
             LoginCommand(
-                organization_code="hansung",
+                organization_code="univ_hansung",
                 login_id="20260001",
                 password="secure_password123",
             )
@@ -287,7 +287,7 @@ async def test_login_identity_provider_unavailable_bubbles_up():
     with pytest.raises(AuthIdentityProviderUnavailableException):
         await service.login(
             LoginCommand(
-                organization_code="hansung",
+                organization_code="univ_hansung",
                 login_id="20260001",
                 password="secure_password123",
             )
@@ -309,7 +309,7 @@ async def test_refresh_rotates_refresh_token():
 
     first_tokens = await service.login(
         LoginCommand(
-            organization_code="hansung",
+            organization_code="univ_hansung",
             login_id="20260001",
             password="secure_password123",
         )
@@ -374,7 +374,7 @@ async def test_logout_deletes_refresh_token():
 
     tokens = await service.login(
         LoginCommand(
-            organization_code="hansung",
+            organization_code="univ_hansung",
             login_id="20260001",
             password="secure_password123",
         )

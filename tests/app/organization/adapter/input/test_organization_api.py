@@ -23,8 +23,8 @@ def client() -> TestClient:
 
 def make_organization() -> Organization:
     organization = Organization(
-        code="hansung",
-        name="Hansung University",
+        code="univ_hansung",
+        name="한성대학교",
         auth_provider=OrganizationAuthProvider.HANSUNG_SIS,
     )
     organization.id = HANSUNG_ID
@@ -46,7 +46,7 @@ def test_list_organizations_returns_200(client, monkeypatch):
     assert response.status_code == 200
     body = response.json()
     assert len(body["data"]) == 1
-    assert body["data"][0]["code"] == "hansung"
+    assert body["data"][0]["code"] == "univ_hansung"
 
 
 def test_get_organization_returns_200(client, monkeypatch):

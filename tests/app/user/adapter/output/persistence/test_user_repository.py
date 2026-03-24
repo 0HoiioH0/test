@@ -89,8 +89,8 @@ async def db_session():
 async def test_save_and_get_user(db_session):
     organization_adapter = OrganizationSQLAlchemyRepository()
     organization = Organization(
-        code="hansung",
-        name="Hansung University",
+        code="univ_hansung",
+        name="한성대학교",
         auth_provider=OrganizationAuthProvider.HANSUNG_SIS,
     )
     organization.id = ORGANIZATION_ID

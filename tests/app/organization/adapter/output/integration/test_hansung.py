@@ -1,4 +1,5 @@
 from dataclasses import dataclass
+from typing import cast
 
 import httpx
 import pytest
@@ -69,8 +70,8 @@ def make_organization(
     provider: OrganizationAuthProvider = OrganizationAuthProvider.HANSUNG_SIS,
 ) -> Organization:
     return Organization(
-        code="hansung",
-        name="Hansung University",
+        code="univ_hansung",
+        name="한성대학교",
         auth_provider=provider,
     )
 
@@ -185,7 +186,7 @@ async def test_authenticate_raises_provider_unavailable_on_timeout(
 @pytest.mark.asyncio
 async def test_authenticate_raises_when_provider_is_not_hansung():
     organization = make_organization()
-    organization.auth_provider = "other"
+    organization.auth_provider = cast(OrganizationAuthProvider, "other")
     service = HansungAuthService()
 
     with pytest.raises(AuthIdentityProviderNotConfiguredException):
