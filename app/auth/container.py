@@ -1,11 +1,11 @@
 from dependency_injector import containers, providers
 from valkey.asyncio import from_url
 
-from app.auth.adapter.output.persistence.repository_adapter import (
-    RefreshTokenRepositoryAdapter,
+from app.auth.adapter.output.persistence.auth_token_repository_adapter import (
+    AuthTokenRepositoryAdapter,
 )
-from app.auth.adapter.output.persistence.valkey.refresh_token import (
-    ValkeyRefreshTokenRepository,
+from app.auth.adapter.output.persistence.valkey.auth_token import (
+    ValkeyAuthTokenRepository,
 )
 from app.auth.application.service.auth import AuthService
 from app.user.adapter.output.persistence.repository_adapter import (
@@ -27,13 +27,13 @@ class AuthContainer(containers.DeclarativeContainer):
         config.VALKEY_URL,
         decode_responses=True,
     )
-    refresh_token_persistence = providers.Singleton(
-        ValkeyRefreshTokenRepository,
+    auth_token_persistence = providers.Singleton(
+        ValkeyAuthTokenRepository,
         client=valkey_client,
     )
-    refresh_token_repository = providers.Factory(
-        RefreshTokenRepositoryAdapter,
-        repository=refresh_token_persistence,
+    auth_token_repository = providers.Factory(
+        AuthTokenRepositoryAdapter,
+        repository=auth_token_persistence,
     )
     user_sqlalchemy_repository = providers.Singleton(UserSQLAlchemyRepository)
     user_repository = providers.Factory(
@@ -43,5 +43,5 @@ class AuthContainer(containers.DeclarativeContainer):
     service = providers.Factory(
         AuthService,
         user_repository=user_repository,
-        refresh_token_repository=refresh_token_repository,
+        auth_token_repository=auth_token_repository,
     )

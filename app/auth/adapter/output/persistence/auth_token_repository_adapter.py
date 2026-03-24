@@ -1,10 +1,10 @@
 from uuid import UUID
 
-from app.auth.domain.repository.refresh_token import RefreshTokenRepository
+from app.auth.domain.repository.auth_token import AuthTokenRepository
 
 
-class RefreshTokenRepositoryAdapter:
-    def __init__(self, *, repository: RefreshTokenRepository):
+class AuthTokenRepositoryAdapter:
+    def __init__(self, *, repository: AuthTokenRepository):
         self.repository = repository
 
     async def save(

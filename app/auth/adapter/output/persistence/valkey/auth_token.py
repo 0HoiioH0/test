@@ -2,10 +2,10 @@ from uuid import UUID
 
 from valkey.asyncio import Valkey
 
-from app.auth.domain.repository.refresh_token import RefreshTokenRepository
+from app.auth.domain.repository.auth_token import AuthTokenRepository
 
 
-class ValkeyRefreshTokenRepository(RefreshTokenRepository):
+class ValkeyAuthTokenRepository(AuthTokenRepository):
     def __init__(self, *, client: Valkey):
         self.client = client
 

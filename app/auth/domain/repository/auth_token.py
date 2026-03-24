@@ -2,7 +2,7 @@ from abc import ABC, abstractmethod
 from uuid import UUID
 
 
-class RefreshTokenRepository(ABC):
+class AuthTokenRepository(ABC):
     @abstractmethod
     async def save(
         self,

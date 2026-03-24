@@ -2,8 +2,8 @@ from uuid import UUID, uuid4
 
 from jwt import PyJWTError
 
-from app.auth.adapter.output.persistence.repository_adapter import (
-    RefreshTokenRepositoryAdapter,
+from app.auth.adapter.output.persistence.auth_token_repository_adapter import (
+    AuthTokenRepositoryAdapter,
 )
 from app.auth.application.dto import AuthTokensDTO
 from app.auth.application.exception import (
@@ -31,10 +31,10 @@ class AuthService(AuthUseCase):
         self,
         *,
         user_repository: UserRepositoryAdapter,
-        refresh_token_repository: RefreshTokenRepositoryAdapter,
+        auth_token_repository: AuthTokenRepositoryAdapter,
     ):
         self.user_repository = user_repository
-        self.refresh_token_repository = refresh_token_repository
+        self.auth_token_repository = auth_token_repository
 
     async def login(self, command: LoginCommand) -> AuthTokensDTO:
         user = await self.user_repository.get_by_email(command.email)
@@ -54,14 +54,14 @@ class AuthService(AuthUseCase):
         user_id = self._parse_user_id(payload)
         jti = self._parse_jti(payload)
 
-        stored_token = await self.refresh_token_repository.get(
+        stored_token = await self.auth_token_repository.get(
             user_id=user_id,
             jti=jti,
         )
         if stored_token != command.refresh_token:
             raise AuthInvalidRefreshTokenException()
 
-        await self.refresh_token_repository.delete(user_id=user_id, jti=jti)
+        await self.auth_token_repository.delete(user_id=user_id, jti=jti)
         return await self._issue_tokens(user_id=user_id)
 
     async def logout(self, command: LogoutCommand) -> None:
@@ -75,7 +75,7 @@ class AuthService(AuthUseCase):
         except AuthInvalidRefreshTokenException:
             return
 
-        await self.refresh_token_repository.delete(user_id=user_id, jti=jti)
+        await self.auth_token_repository.delete(user_id=user_id, jti=jti)
 
     async def _issue_tokens(self, *, user_id: UUID) -> AuthTokensDTO:
         access_token = TokenHelper.create_token(
@@ -87,7 +87,7 @@ class AuthService(AuthUseCase):
             payload={"sub": str(user_id), "jti": refresh_jti},
             token_type=TokenType.REFRESH,
         )
-        await self.refresh_token_repository.save(
+        await self.auth_token_repository.save(
             user_id=user_id,
             jti=refresh_jti,
             refresh_token=refresh_token,

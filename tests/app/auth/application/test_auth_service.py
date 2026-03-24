@@ -2,8 +2,8 @@ from uuid import UUID, uuid4
 
 import pytest
 
-from app.auth.adapter.output.persistence.repository_adapter import (
-    RefreshTokenRepositoryAdapter,
+from app.auth.adapter.output.persistence.auth_token_repository_adapter import (
+    AuthTokenRepositoryAdapter,
 )
 from app.auth.application.exception import (
     AuthInvalidCredentialsException,
@@ -15,7 +15,7 @@ from app.auth.domain.command import (
     LogoutCommand,
     RefreshTokenCommand,
 )
-from app.auth.domain.repository.refresh_token import RefreshTokenRepository
+from app.auth.domain.repository.auth_token import AuthTokenRepository
 from app.user.adapter.output.persistence.repository_adapter import (
     UserRepositoryAdapter,
 )
@@ -52,7 +52,7 @@ class InMemoryUserRepository(UserRepository):
         )
 
 
-class InMemoryRefreshTokenRepository(RefreshTokenRepository):
+class InMemoryAuthTokenRepository(AuthTokenRepository):
     def __init__(self):
         self.tokens: dict[str, str] = {}
 
@@ -89,11 +89,11 @@ def make_user(
 async def test_login_success_issues_and_stores_tokens():
     user = make_user()
     user_repository = InMemoryUserRepository([user])
-    refresh_repository = InMemoryRefreshTokenRepository()
+    auth_token_repository = InMemoryAuthTokenRepository()
     service = AuthService(
         user_repository=UserRepositoryAdapter(repository=user_repository),
-        refresh_token_repository=RefreshTokenRepositoryAdapter(
-            repository=refresh_repository
+        auth_token_repository=AuthTokenRepositoryAdapter(
+            repository=auth_token_repository
         ),
     )
 
@@ -102,7 +102,7 @@ async def test_login_success_issues_and_stores_tokens():
     )
 
     refresh_payload = TokenHelper.decode_token(tokens.refresh_token)
-    stored_token = await refresh_repository.get(
+    stored_token = await auth_token_repository.get(
         user_id=user.id,
         jti=refresh_payload["jti"],
     )
@@ -117,8 +117,8 @@ async def test_login_invalid_password_raises():
         user_repository=UserRepositoryAdapter(
             repository=InMemoryUserRepository([user])
         ),
-        refresh_token_repository=RefreshTokenRepositoryAdapter(
-            repository=InMemoryRefreshTokenRepository()
+        auth_token_repository=AuthTokenRepositoryAdapter(
+            repository=InMemoryAuthTokenRepository()
         ),
     )
 
@@ -131,13 +131,13 @@ async def test_login_invalid_password_raises():
 @pytest.mark.asyncio
 async def test_refresh_rotates_refresh_token():
     user = make_user()
-    refresh_repository = InMemoryRefreshTokenRepository()
+    auth_token_repository = InMemoryAuthTokenRepository()
     service = AuthService(
         user_repository=UserRepositoryAdapter(
             repository=InMemoryUserRepository([user])
         ),
-        refresh_token_repository=RefreshTokenRepositoryAdapter(
-            repository=refresh_repository
+        auth_token_repository=AuthTokenRepositoryAdapter(
+            repository=auth_token_repository
         ),
     )
 
@@ -153,11 +153,13 @@ async def test_refresh_rotates_refresh_token():
 
     assert refreshed_tokens.refresh_token != first_tokens.refresh_token
     assert (
-        await refresh_repository.get(user_id=user.id, jti=first_payload["jti"])
+        await auth_token_repository.get(
+            user_id=user.id, jti=first_payload["jti"]
+        )
         is None
     )
     assert (
-        await refresh_repository.get(
+        await auth_token_repository.get(
             user_id=user.id, jti=refreshed_payload["jti"]
         )
         == refreshed_tokens.refresh_token
@@ -170,8 +172,8 @@ async def test_refresh_with_unknown_token_raises():
         user_repository=UserRepositoryAdapter(
             repository=InMemoryUserRepository()
         ),
-        refresh_token_repository=RefreshTokenRepositoryAdapter(
-            repository=InMemoryRefreshTokenRepository()
+        auth_token_repository=AuthTokenRepositoryAdapter(
+            repository=InMemoryAuthTokenRepository()
         ),
     )
 
@@ -192,8 +194,8 @@ async def test_refresh_without_token_raises():
         user_repository=UserRepositoryAdapter(
             repository=InMemoryUserRepository()
         ),
-        refresh_token_repository=RefreshTokenRepositoryAdapter(
-            repository=InMemoryRefreshTokenRepository()
+        auth_token_repository=AuthTokenRepositoryAdapter(
+            repository=InMemoryAuthTokenRepository()
         ),
     )
 
@@ -204,13 +206,13 @@ async def test_refresh_without_token_raises():
 @pytest.mark.asyncio
 async def test_logout_deletes_refresh_token():
     user = make_user()
-    refresh_repository = InMemoryRefreshTokenRepository()
+    auth_token_repository = InMemoryAuthTokenRepository()
     service = AuthService(
         user_repository=UserRepositoryAdapter(
             repository=InMemoryUserRepository([user])
         ),
-        refresh_token_repository=RefreshTokenRepositoryAdapter(
-            repository=refresh_repository
+        auth_token_repository=AuthTokenRepositoryAdapter(
+            repository=auth_token_repository
         ),
     )
 
@@ -222,7 +224,7 @@ async def test_logout_deletes_refresh_token():
     await service.logout(LogoutCommand(refresh_token=tokens.refresh_token))
 
     assert (
-        await refresh_repository.get(
+        await auth_token_repository.get(
             user_id=user.id, jti=refresh_payload["jti"]
         )
         is None
