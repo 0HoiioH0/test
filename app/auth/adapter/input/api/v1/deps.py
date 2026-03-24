@@ -1,7 +1,8 @@
+from abc import ABC, abstractmethod
 from uuid import UUID
 
 import jwt
-from fastapi import Cookie, Depends
+from fastapi import Cookie, Depends, Request
 
 from app.auth.application.exception import (
     AuthForbiddenException,
@@ -43,19 +44,59 @@ async def require_authenticated_user(
     return CurrentUser.from_user(user)
 
 
-async def require_admin_user(
-    current_user: CurrentUser = Depends(require_authenticated_user),
-) -> CurrentUser:
-    if current_user.role != UserRole.ADMIN:
-        raise AuthForbiddenException()
+class BasePermission(ABC):
+    exception = AuthForbiddenException
 
-    return current_user
+    @abstractmethod
+    async def has_permission(
+        self,
+        _request: Request,
+        current_user: CurrentUser,
+    ) -> bool:
+        pass
 
 
-async def require_professor_or_admin_user(
-    current_user: CurrentUser = Depends(require_authenticated_user),
-) -> CurrentUser:
-    if current_user.role not in (UserRole.PROFESSOR, UserRole.ADMIN):
-        raise AuthForbiddenException()
+class IsAuthenticated(BasePermission):
+    exception = AuthUnauthorizedException
 
-    return current_user
+    async def has_permission(
+        self,
+        _request: Request,
+        current_user: CurrentUser,
+    ) -> bool:
+        return current_user.authenticated
+
+
+class IsAdmin(BasePermission):
+    async def has_permission(
+        self,
+        _request: Request,
+        current_user: CurrentUser,
+    ) -> bool:
+        return current_user.role == UserRole.ADMIN
+
+
+class IsProfessorOrAdmin(BasePermission):
+    async def has_permission(
+        self,
+        _request: Request,
+        current_user: CurrentUser,
+    ) -> bool:
+        return current_user.role in (UserRole.PROFESSOR, UserRole.ADMIN)
+
+
+class PermissionDependency:
+    def __init__(self, permissions: list[type[BasePermission]]):
+        self.permissions = permissions
+
+    async def __call__(
+        self,
+        request: Request,
+        current_user: CurrentUser = Depends(require_authenticated_user),
+    ) -> CurrentUser:
+        for permission in self.permissions:
+            checker = permission()
+            if not await checker.has_permission(request, current_user):
+                raise checker.exception()
+
+        return current_user

@@ -4,8 +4,9 @@ from dependency_injector.wiring import Provide, inject
 from fastapi import APIRouter, Depends
 
 from app.auth.adapter.input.api.v1.deps import (
-    require_authenticated_user,
-    require_professor_or_admin_user,
+    IsAuthenticated,
+    IsProfessorOrAdmin,
+    PermissionDependency,
 )
 from app.auth.domain.entity import CurrentUser
 from app.classroom.adapter.input.api.v1.request import (
@@ -31,7 +32,9 @@ router = APIRouter(prefix="/classrooms", tags=["classrooms"])
 @inject
 async def create_classroom(
     request: CreateClassroomRequest,
-    current_user: CurrentUser = Depends(require_professor_or_admin_user),
+    current_user: CurrentUser = Depends(
+        PermissionDependency([IsProfessorOrAdmin])
+    ),
     usecase: ClassroomUseCase = Depends(Provide[ClassroomContainer.service]),
 ):
     classroom = await usecase.create_classroom(
@@ -64,7 +67,9 @@ async def create_classroom(
 @router.get("", response_model=ClassroomListResponse)
 @inject
 async def list_classrooms(
-    current_user: CurrentUser = Depends(require_authenticated_user),
+    current_user: CurrentUser = Depends(
+        PermissionDependency([IsAuthenticated])
+    ),
     usecase: ClassroomUseCase = Depends(Provide[ClassroomContainer.service]),
 ):
     classrooms = await usecase.list_classrooms(current_user=current_user)
@@ -91,7 +96,9 @@ async def list_classrooms(
 @inject
 async def get_classroom(
     classroom_id: UUID,
-    current_user: CurrentUser = Depends(require_authenticated_user),
+    current_user: CurrentUser = Depends(
+        PermissionDependency([IsAuthenticated])
+    ),
     usecase: ClassroomUseCase = Depends(Provide[ClassroomContainer.service]),
 ):
     classroom = await usecase.get_classroom(
@@ -117,7 +124,9 @@ async def get_classroom(
 async def update_classroom(
     classroom_id: UUID,
     request: UpdateClassroomRequest,
-    current_user: CurrentUser = Depends(require_professor_or_admin_user),
+    current_user: CurrentUser = Depends(
+        PermissionDependency([IsProfessorOrAdmin])
+    ),
     usecase: ClassroomUseCase = Depends(Provide[ClassroomContainer.service]),
 ):
     classroom = await usecase.update_classroom(
@@ -145,7 +154,9 @@ async def update_classroom(
 @inject
 async def delete_classroom(
     classroom_id: UUID,
-    current_user: CurrentUser = Depends(require_professor_or_admin_user),
+    current_user: CurrentUser = Depends(
+        PermissionDependency([IsProfessorOrAdmin])
+    ),
     usecase: ClassroomUseCase = Depends(Provide[ClassroomContainer.service]),
 ):
     classroom = await usecase.delete_classroom(

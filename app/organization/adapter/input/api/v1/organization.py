@@ -3,8 +3,7 @@ from uuid import UUID
 from dependency_injector.wiring import Provide, inject
 from fastapi import APIRouter, Depends
 
-from app.auth.adapter.input.api.v1.deps import require_admin_user
-from app.auth.domain.entity import CurrentUser
+from app.auth.adapter.input.api.v1.deps import IsAdmin, PermissionDependency
 from app.organization.adapter.input.api.v1.request import (
     CreateOrganizationRequest,
     UpdateOrganizationRequest,
@@ -35,11 +34,14 @@ def _to_payload(organization: Organization) -> OrganizationPayload:
     )
 
 
-@router.post("", response_model=OrganizationResponse)
+@router.post(
+    "",
+    response_model=OrganizationResponse,
+    dependencies=[Depends(PermissionDependency([IsAdmin]))],
+)
 @inject
 async def create_organization(
     request: CreateOrganizationRequest,
-    _current_user: CurrentUser = Depends(require_admin_user),
     usecase: OrganizationUseCase = Depends(
         Provide[OrganizationContainer.service]
     ),
@@ -75,12 +77,15 @@ async def get_organization(
     return OrganizationResponse(data=_to_payload(organization))
 
 
-@router.patch("/{organization_id}", response_model=OrganizationResponse)
+@router.patch(
+    "/{organization_id}",
+    response_model=OrganizationResponse,
+    dependencies=[Depends(PermissionDependency([IsAdmin]))],
+)
 @inject
 async def update_organization(
     organization_id: UUID,
     request: UpdateOrganizationRequest,
-    _current_user: CurrentUser = Depends(require_admin_user),
     usecase: OrganizationUseCase = Depends(
         Provide[OrganizationContainer.service]
     ),
@@ -92,11 +97,14 @@ async def update_organization(
     return OrganizationResponse(data=_to_payload(organization))
 
 
-@router.delete("/{organization_id}", response_model=OrganizationResponse)
+@router.delete(
+    "/{organization_id}",
+    response_model=OrganizationResponse,
+    dependencies=[Depends(PermissionDependency([IsAdmin]))],
+)
 @inject
 async def delete_organization(
     organization_id: UUID,
-    _current_user: CurrentUser = Depends(require_admin_user),
     usecase: OrganizationUseCase = Depends(
         Provide[OrganizationContainer.service]
     ),

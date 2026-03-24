@@ -4,10 +4,10 @@ from dependency_injector.wiring import Provide, inject
 from fastapi import APIRouter, Depends
 
 from app.auth.adapter.input.api.v1.deps import (
-    require_admin_user,
-    require_authenticated_user,
+    IsAdmin,
+    IsAuthenticated,
+    PermissionDependency,
 )
-from app.auth.domain.entity import CurrentUser
 from app.user.adapter.input.api.v1.request import (
     CreateUserRequest,
     UpdateUserRequest,
@@ -24,11 +24,14 @@ from app.user.domain.usecase import UserUseCase
 router = APIRouter(prefix="/users", tags=["users"])
 
 
-@router.post("", response_model=UserResponse)
+@router.post(
+    "",
+    response_model=UserResponse,
+    dependencies=[Depends(PermissionDependency([IsAdmin]))],
+)
 @inject
 async def create_user(
     request: CreateUserRequest,
-    _current_user: CurrentUser = Depends(require_admin_user),
     usecase: UserUseCase = Depends(Provide[UserContainer.service]),
 ):
     user = await usecase.create_user(CreateUserCommand(**request.model_dump()))
@@ -46,10 +49,13 @@ async def create_user(
     )
 
 
-@router.get("", response_model=UserListResponse)
+@router.get(
+    "",
+    response_model=UserListResponse,
+    dependencies=[Depends(PermissionDependency([IsAuthenticated]))],
+)
 @inject
 async def list_users(
-    _current_user: CurrentUser = Depends(require_authenticated_user),
     usecase: UserUseCase = Depends(Provide[UserContainer.service]),
 ):
     users = await usecase.list_users()
@@ -116,11 +122,14 @@ async def update_user(
     )
 
 
-@router.delete("/{user_id}", response_model=UserResponse)
+@router.delete(
+    "/{user_id}",
+    response_model=UserResponse,
+    dependencies=[Depends(PermissionDependency([IsAdmin]))],
+)
 @inject
 async def delete_user(
     user_id: UUID,
-    _current_user: CurrentUser = Depends(require_admin_user),
     usecase: UserUseCase = Depends(Provide[UserContainer.service]),
 ):
     user = await usecase.delete_user(user_id)
