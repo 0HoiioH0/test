@@ -3,9 +3,10 @@ This file is for coding agents working in `backend/`.
 
 ## Repository Snapshot
 - Python backend managed with `uv`
-- FastAPI app with dependency-injector, SQLAlchemy async ORM, Alembic, PostgreSQL, and Valkey
+- FastAPI boilerplate with dependency-injector, SQLAlchemy async ORM, Alembic, PostgreSQL, and Valkey
 - Main entrypoint is `main.py`; `create_app()` builds the app and `app` is the ASGI export
 - Main code lives in `app/` and `core/`; tests live in `tests/`; migrations live in `alembic/`
+- Built-in modules include `user`, `auth`, and `file`; treat them as default boilerplate modules, not throwaway samples
 
 ## Source Of Truth
 - Read `pyproject.toml` for Python, Ruff, and pytest settings
@@ -86,8 +87,8 @@ This file is for coding agents working in `backend/`.
   - `domain/command/__init__.py` for use-case command models
   - `domain/usecase/*.py` for use-case interfaces
   - `adapter/input/api/v1/response/__init__.py` for HTTP response models
-  - `adapter/output/persistence/repository_adapter.py` for application-facing persistence adapter wrappers
   - `adapter/output/persistence/sqlalchemy/*.py` for concrete SQLAlchemy repositories
+  - `adapter/output/persistence/valkey/*.py` for concrete Valkey repositories when in-memory storage is needed
   - `application/dto/result.py` only when a non-HTTP use-case output model is actually needed
 
 ## Imports
@@ -154,8 +155,8 @@ This file is for coding agents working in `backend/`.
   - use case interface in `domain/usecase/*.py`
   - response payload and envelopes in `adapter/input/api/v1/response/__init__.py`
   - service implementation in `application/service/*.py`
-  - repository adapter in `adapter/output/persistence/repository_adapter.py`
-  - concrete persistence in `adapter/output/persistence/sqlalchemy/*.py`
+  - repository port in `domain/repository/*.py`
+  - concrete persistence in `adapter/output/persistence/sqlalchemy/*.py` or `adapter/output/persistence/valkey/*.py`
   - service returns domain entities unless a dedicated result model is justified
 - A representative naming set is:
   - `CreateUserRequest`, `UpdateUserRequest`
@@ -166,6 +167,7 @@ This file is for coding agents working in `backend/`.
 - Do not place command models in `application/dto/command.py`
 - Do not place HTTP response models in `application/dto/response.py`
 - Do not place FastAPI request models outside the adapter input layer
+- Do not make application services depend on adapter wrapper classes; depend on domain repository ports directly
 - Add `result.py` only if multiple adapters share the same read model or the service should stop returning entities
 
 ## Domain And Service Conventions

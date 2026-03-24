@@ -11,8 +11,10 @@ class CommonSettings(BaseSettings):
     DEBUG: bool = False
     PROFILING_ENABLED: bool = False
 
-    APP_NAME: str = "Development Outsourcing Platform"
-    APP_DESCRIPTION: str = "LLM 기반 외주 고도화 플랫폼 백엔드"
+    APP_NAME: str = "FastAPI Hexagonal Boilerplate"
+    APP_DESCRIPTION: str = (
+        "Production-ready FastAPI boilerplate with hexagonal architecture"
+    )
     APP_VERSION: str = "0.1.0"
     API_PREFIX: str = "/api"
 

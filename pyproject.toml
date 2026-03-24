@@ -1,10 +1,10 @@
 [project]
-name = "development-outsourcing-platform"
+name = "fastapi-hexagonal-boilerplate"
 version = "0.1.0"
-description = "Add your description here"
+description = "FastAPI boilerplate with hexagonal architecture, JWT cookie auth, PostgreSQL, and Valkey"
 requires-python = ">=3.13"
 authors = [
-    {name = "PRESSO", email = "caff1nepill@rmtechs.co.kr"}
+    {name = "Boilerplate Maintainers", email = "maintainers@example.com"}
 ]
 
 dependencies = [
@@ -72,4 +72,3 @@ indent-style = "space"
 quote-style = "double"
 docstring-code-format = true
 preview = true
-
