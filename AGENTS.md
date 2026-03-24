@@ -81,6 +81,9 @@ This file is for coding agents working in `backend/`.
   - `app/<domain>/application/` for services, DTOs, and app exceptions
   - `app/<domain>/adapter/` for API and persistence adapters
   - `core/` for shared config, DB, framework, and helpers
+- Treat `core/` as technical infrastructure only; do not place classroom, organization, user, auth, enrollment, or other product rules there
+- If logic mentions a domain noun such as classroom, organization, student, professor, membership, invitation, or organization-scoped visibility, it belongs in `app/<domain>/...`, not in `core/`
+- Put reusable technical primitives in `core/`; put reusable business rules in the owning domain, even if multiple endpoints reuse them
 - Keep routers thin and business rules in application services
 - Depend on repository abstractions from services, not directly on SQLAlchemy internals
 - Keep persistence adapters in adapter/output modules, not in services or routers
@@ -92,6 +95,13 @@ This file is for coding agents working in `backend/`.
   - `adapter/output/persistence/sqlalchemy/*.py` for concrete SQLAlchemy repositories
   - `adapter/output/persistence/valkey/*.py` for concrete Valkey repositories when in-memory storage is needed
   - `application/dto/result.py` only when a non-HTTP use-case output model is actually needed
+
+## Common Vs Domain Logic
+- Common logic means framework wiring, middleware, base request/response types, shared exception plumbing, DB/session helpers, and other cross-domain technical utilities
+- Domain logic means rules tied to business data or vocabulary, such as classroom membership, invited-student visibility, professor/admin authority, organization scoping, and user lifecycle policy
+- If renaming `classroom` or `organization` to another domain would change the rule, that rule is domain logic and must not go into `core/`
+- If code needs `CurrentUser`, `organization_id`, a domain entity, or repository data to decide behavior, prefer `app/<domain>/application` or the owning auth/domain module, not shared infrastructure
+- Keep `core/` generic enough to be reused by multiple domains without knowing business meaning; once a helper encodes product policy, move it out of `core/`
 
 ## Imports
 - Follow Ruff/isort ordering: standard library, third-party, then local imports
@@ -132,11 +142,14 @@ This file is for coding agents working in `backend/`.
 - Define routes under adapter input modules such as `app/.../adapter/input/api/v1/`
 - Use `APIRouter` with explicit `prefix` and `tags`
 - Wire dependencies with `Depends(Provide[...])`
-- Keep route authorization class-based in `app/auth/adapter/input/api/v1/deps.py`
-- Permission classes should inherit from `BasePermission` and implement async `has_permission(request, current_user)`
+- Keep shared FastAPI authentication and authorization infrastructure under `core/fastapi/`, not inside a business domain package
+- Route authorization is class-based in `core/fastapi/dependencies/permission.py`
+- Permission classes should inherit from `BasePermission` and implement async `has_permission(request)`
 - Pass permission classes into `PermissionDependency([...])`; do not inline ad hoc role checks in routers
 - Use `dependencies=[Depends(PermissionDependency([...]))]` when a route only needs access gating
-- Use `current_user: CurrentUser = Depends(PermissionDependency([...]))` when the use case needs actor context
+- Use `current_user: CurrentUser = Depends(get_current_user)` when the use case needs actor context after permission gating
+- Keep route-level dependencies generic, such as `IsAuthenticated`, `IsAdmin`, or `IsProfessorOrAdmin`; resource-specific authorization must live in the owning use case/service
+- Do not duplicate resource ownership or membership checks in routers; re-check them inside the application service after loading the target resource
 - Keep HTTP request/response Pydantic models in the API adapter layer, for example `request/__init__.py` and `response/__init__.py`
 - Keep command models in `domain/command/` and pass them from routers to use cases/services
 - Type router dependencies with domain use case interfaces when possible
@@ -158,7 +171,7 @@ This file is for coding agents working in `backend/`.
 ## Current API Pattern
 - The current preferred pattern is:
   - request schema in `adapter/input/api/v1/request/__init__.py`
-  - authorization dependency in `app/auth/adapter/input/api/v1/deps.py`
+  - shared authentication/authorization dependency in `core/fastapi/dependencies/permission.py`
   - command model in `domain/command/__init__.py`
   - use case interface in `domain/usecase/*.py`
   - response payload and envelopes in `adapter/input/api/v1/response/__init__.py`
@@ -176,7 +189,8 @@ This file is for coding agents working in `backend/`.
 - Do not place HTTP response models in `application/dto/response.py`
 - Do not place FastAPI request models outside the adapter input layer
 - Compose authorization at the API adapter boundary before calling services/use cases
-- When actor context is needed, pass `CurrentUser` from the router into the use case; do not re-decode tokens or repeat role checks in routers
+- When actor context is needed, pass `CurrentUser` from the router into the use case via `Depends(get_current_user)`; do not re-decode tokens or repeat role checks in routers
+- If a rule depends on both actor and target resource, enforce it in the application service after loading the resource, not in the router
 - Do not make application services depend on adapter wrapper classes; depend on domain repository ports directly
 - Add `result.py` only if multiple adapters share the same read model or the service should stop returning entities
 
@@ -185,6 +199,9 @@ This file is for coding agents working in `backend/`.
 - Value objects belong in domain or shared model layers, not routers
 - The current `User` entity is flat and should stay that way: use direct fields such as `organization_id`, `login_id`, `role`, `email`, `name`, `status`, and `is_deleted`; do not reintroduce nested profile-style value objects for user metadata
 - Application services are async and own business logic
+- Application services own domain authorization beyond basic authentication, such as resource visibility, membership, management authority, and organization-scoped access rules
+- Keep aggregate-specific validation with the aggregate's service; for example, classroom membership and classroom manager checks stay in `app/classroom`, even if they read `UserRepository`
+- Domain/application code may depend on other domain repositories to validate business relationships, but should not move those relationship rules into `core/` just because they are reused
 - Apply `@transactional` to write operations that should commit or roll back atomically
 - Keep read operations simple and avoid transactions unless existing patterns require them
 
@@ -193,7 +210,8 @@ This file is for coding agents working in `backend/`.
 - Reuse `CustomException` subclasses so APIs return consistent `error_code`, `message`, and `detail`
 - Use `404`-style exceptions for missing resources and `400`-style exceptions for business conflicts
 - `IsAuthenticated` failures should raise `AuthUnauthorizedException`; role or permission failures should raise `AuthForbiddenException`
-- Prefer adding reusable permission classes in `app/auth/adapter/input/api/v1/deps.py` over duplicating authorization logic in routers
+- Prefer adding reusable permission classes in `core/fastapi/dependencies/permission.py` for shared route-level authorization, and keep resource-specific access failures in application/domain code
+- Use auth exceptions for authentication or coarse authorization failures only; use domain exceptions for state conflicts, invalid membership, and missing domain-linked actors
 - Let FastAPI/Pydantic validation errors flow into the existing `SERVER__REQUEST_VALIDATION_ERROR` handler
 - Do not swallow exceptions silently
 - Roll back DB work on failures inside transactional flows
