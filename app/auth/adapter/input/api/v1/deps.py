@@ -50,3 +50,12 @@ async def require_admin_user(
         raise AuthForbiddenException()
 
     return current_user
+
+
+async def require_professor_or_admin_user(
+    current_user: CurrentUser = Depends(require_authenticated_user),
+) -> CurrentUser:
+    if current_user.role not in (UserRole.PROFESSOR, UserRole.ADMIN):
+        raise AuthForbiddenException()
+
+    return current_user
