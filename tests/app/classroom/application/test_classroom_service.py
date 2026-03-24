@@ -3,6 +3,8 @@ from uuid import UUID, uuid4
 
 import pytest
 
+from app.auth.application.exception import AuthForbiddenException
+from app.auth.domain.entity import CurrentUser
 from app.classroom.application.exception import (
     ClassroomAlreadyExistsException,
     ClassroomInvalidProfessorRoleException,
@@ -150,25 +152,43 @@ def make_service(
     )
 
 
+def make_current_user(
+    *,
+    role: UserRole = UserRole.STUDENT,
+    user_id: UUID = STUDENT_ID,
+    organization_id: UUID = ORG_ID,
+) -> CurrentUser:
+    return CurrentUser(
+        id=user_id,
+        organization_id=organization_id,
+        login_id="current-user",
+        role=role,
+    )
+
+
 @pytest.mark.asyncio
 async def test_create_classroom_success():
     service = make_service()
 
     classroom = await service.create_classroom(
-        CreateClassroomCommand(
+        current_user=make_current_user(
+            role=UserRole.PROFESSOR,
+            user_id=PROFESSOR_ID,
+        ),
+        command=CreateClassroomCommand(
             organization_id=ORG_ID,
             name="AI 기초",
-            professor_ids=[PROFESSOR_ID, SECOND_PROFESSOR_ID],
+            professor_ids=[SECOND_PROFESSOR_ID],
             grade=3,
             semester="1학기",
             section="01",
             description="AI 입문 강의실",
             student_ids=[STUDENT_ID],
-        )
+        ),
     )
 
     assert classroom.name == "AI 기초"
-    assert classroom.professor_ids == [PROFESSOR_ID, SECOND_PROFESSOR_ID]
+    assert classroom.professor_ids == [SECOND_PROFESSOR_ID, PROFESSOR_ID]
 
 
 @pytest.mark.asyncio
@@ -177,14 +197,18 @@ async def test_create_classroom_duplicate_schedule_raises():
 
     with pytest.raises(ClassroomAlreadyExistsException):
         await service.create_classroom(
-            CreateClassroomCommand(
+            current_user=make_current_user(
+                role=UserRole.PROFESSOR,
+                user_id=PROFESSOR_ID,
+            ),
+            command=CreateClassroomCommand(
                 organization_id=ORG_ID,
                 name="AI 기초",
                 professor_ids=[PROFESSOR_ID],
                 grade=3,
                 semester="1학기",
                 section="01",
-            )
+            ),
         )
 
 
@@ -199,14 +223,18 @@ async def test_create_classroom_invalid_professor_role_raises():
 
     with pytest.raises(ClassroomInvalidProfessorRoleException):
         await service.create_classroom(
-            CreateClassroomCommand(
+            current_user=make_current_user(
+                role=UserRole.PROFESSOR,
+                user_id=PROFESSOR_ID,
+            ),
+            command=CreateClassroomCommand(
                 organization_id=ORG_ID,
                 name="AI 기초",
                 professor_ids=[PROFESSOR_ID],
                 grade=3,
                 semester="1학기",
                 section="01",
-            )
+            ),
         )
 
 
@@ -221,7 +249,11 @@ async def test_create_classroom_invalid_student_role_raises():
 
     with pytest.raises(ClassroomInvalidStudentRoleException):
         await service.create_classroom(
-            CreateClassroomCommand(
+            current_user=make_current_user(
+                role=UserRole.PROFESSOR,
+                user_id=PROFESSOR_ID,
+            ),
+            command=CreateClassroomCommand(
                 organization_id=ORG_ID,
                 name="AI 기초",
                 professor_ids=[PROFESSOR_ID],
@@ -229,15 +261,28 @@ async def test_create_classroom_invalid_student_role_raises():
                 semester="1학기",
                 section="01",
                 student_ids=[STUDENT_ID],
-            )
+            ),
         )
 
 
 @pytest.mark.asyncio
-async def test_list_classrooms_returns_organization_classrooms():
-    service = make_service([make_classroom()])
+async def test_list_classrooms_returns_only_accessible_classrooms():
+    another_classroom = Classroom(
+        organization_id=ORG_ID,
+        name="데이터 과학",
+        professor_ids=[SECOND_PROFESSOR_ID],
+        grade=2,
+        semester="2학기",
+        section="02",
+        description=None,
+        student_ids=[],
+    )
+    another_classroom.id = uuid4()
+    service = make_service([make_classroom(), another_classroom])
 
-    classrooms = await service.list_classrooms(ORG_ID)
+    classrooms = await service.list_classrooms(
+        current_user=make_current_user(),
+    )
 
     assert len(classrooms) == 1
     assert classrooms[0].name == "AI 기초"
@@ -248,7 +293,21 @@ async def test_get_classroom_not_found_raises():
     service = make_service()
 
     with pytest.raises(ClassroomNotFoundException):
-        await service.get_classroom(uuid4())
+        await service.get_classroom(
+            classroom_id=uuid4(),
+            current_user=make_current_user(),
+        )
+
+
+@pytest.mark.asyncio
+async def test_get_classroom_forbidden_for_other_organization_user():
+    service = make_service([make_classroom()])
+
+    with pytest.raises(AuthForbiddenException):
+        await service.get_classroom(
+            classroom_id=UUID("55555555-5555-5555-5555-555555555555"),
+            current_user=make_current_user(organization_id=uuid4()),
+        )
 
 
 @pytest.mark.asyncio
@@ -256,16 +315,20 @@ async def test_update_classroom_success():
     service = make_service([make_classroom()])
 
     classroom = await service.update_classroom(
-        UUID("55555555-5555-5555-5555-555555555555"),
-        UpdateClassroomCommand(
+        classroom_id=UUID("55555555-5555-5555-5555-555555555555"),
+        current_user=make_current_user(
+            role=UserRole.PROFESSOR,
+            user_id=PROFESSOR_ID,
+        ),
+        command=UpdateClassroomCommand(
             name="AI 심화",
-            professor_ids=[PROFESSOR_ID, SECOND_PROFESSOR_ID],
+            professor_ids=[SECOND_PROFESSOR_ID],
             student_ids=[],
         ),
     )
 
     assert classroom.name == "AI 심화"
-    assert classroom.professor_ids == [PROFESSOR_ID, SECOND_PROFESSOR_ID]
+    assert classroom.professor_ids == [SECOND_PROFESSOR_ID, PROFESSOR_ID]
     assert classroom.student_ids == []
 
 
@@ -285,13 +348,32 @@ async def test_update_classroom_duplicate_schedule_raises():
 
     with pytest.raises(ClassroomAlreadyExistsException):
         await service.update_classroom(
-            another_classroom.id,
-            UpdateClassroomCommand(
+            classroom_id=another_classroom.id,
+            current_user=make_current_user(
+                role=UserRole.PROFESSOR,
+                user_id=SECOND_PROFESSOR_ID,
+            ),
+            command=UpdateClassroomCommand(
                 name="AI 기초",
                 grade=3,
                 semester="1학기",
                 section="01",
             ),
+        )
+
+
+@pytest.mark.asyncio
+async def test_update_classroom_forbidden_for_non_manager_professor():
+    service = make_service([make_classroom()])
+
+    with pytest.raises(AuthForbiddenException):
+        await service.update_classroom(
+            classroom_id=UUID("55555555-5555-5555-5555-555555555555"),
+            current_user=make_current_user(
+                role=UserRole.PROFESSOR,
+                user_id=SECOND_PROFESSOR_ID,
+            ),
+            command=UpdateClassroomCommand(name="AI 심화"),
         )
 
 
@@ -307,7 +389,8 @@ async def test_delete_classroom_removes_entity():
     )
 
     classroom = await service.delete_classroom(
-        UUID("55555555-5555-5555-5555-555555555555")
+        classroom_id=UUID("55555555-5555-5555-5555-555555555555"),
+        current_user=make_current_user(role=UserRole.ADMIN, user_id=uuid4()),
     )
 
     assert classroom.id not in repository.classrooms

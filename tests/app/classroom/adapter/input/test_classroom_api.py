@@ -3,6 +3,7 @@ from uuid import UUID, uuid4
 import pytest
 from fastapi.testclient import TestClient
 
+from app.auth.application.exception import AuthForbiddenException
 from app.classroom.application.exception import (
     ClassroomAlreadyExistsException,
     ClassroomNotFoundException,
@@ -79,10 +80,7 @@ def test_list_classrooms_returns_only_accessible_classrooms(
     client, monkeypatch
 ):
     async def list_stub_classrooms(*_args, **_kwargs):
-        return [
-            make_classroom(student_ids=[STUDENT_ID]),
-            make_classroom(student_ids=[uuid4()]),
-        ]
+        return [make_classroom(student_ids=[STUDENT_ID])]
 
     current_user = make_user()
 
@@ -174,15 +172,15 @@ def test_create_classroom_returns_403_for_student(client, monkeypatch):
 
 
 def test_get_classroom_returns_403_for_other_organization(client, monkeypatch):
-    async def get_stub_classroom(*_args, **_kwargs):
-        return make_classroom()
+    async def raise_forbidden(*_args, **_kwargs):
+        raise AuthForbiddenException()
 
     other_org_user = make_user(organization_id=OTHER_ORG_ID)
 
     async def get_by_id_stub(*_args, **_kwargs):
         return other_org_user
 
-    monkeypatch.setattr(ClassroomService, "get_classroom", get_stub_classroom)
+    monkeypatch.setattr(ClassroomService, "get_classroom", raise_forbidden)
     monkeypatch.setattr(UserSQLAlchemyRepository, "get_by_id", get_by_id_stub)
     set_access_token_cookie(client, other_org_user)
 
@@ -231,8 +229,8 @@ def test_update_classroom_returns_403_for_non_member_professor(
     client,
     monkeypatch,
 ):
-    async def get_stub_classroom(*_args, **_kwargs):
-        return make_classroom()
+    async def raise_forbidden(*_args, **_kwargs):
+        raise AuthForbiddenException()
 
     professor_user = make_user(
         role=UserRole.PROFESSOR,
@@ -242,7 +240,7 @@ def test_update_classroom_returns_403_for_non_member_professor(
     async def get_by_id_stub(*_args, **_kwargs):
         return professor_user
 
-    monkeypatch.setattr(ClassroomService, "get_classroom", get_stub_classroom)
+    monkeypatch.setattr(ClassroomService, "update_classroom", raise_forbidden)
     monkeypatch.setattr(UserSQLAlchemyRepository, "get_by_id", get_by_id_stub)
     set_access_token_cookie(client, professor_user)
 
