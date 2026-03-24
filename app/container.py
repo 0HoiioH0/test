@@ -3,6 +3,7 @@ from dependency_injector.containers import DeclarativeContainer
 
 from app.auth.container import AuthContainer
 from app.file.container import FileContainer
+from app.organization.container import OrganizationContainer
 from app.user.container import UserContainer
 
 
@@ -12,10 +13,12 @@ class AppContainer(DeclarativeContainer):
         packages=[
             "app.auth.adapter.input.api.v1",
             "app.file.adapter.input.api.v1",
+            "app.organization.adapter.input.api.v1",
             "app.user.adapter.input.api.v1",
         ]
     )
 
     auth = providers.Container(AuthContainer)
     file = providers.Container(FileContainer)
+    organization = providers.Container(OrganizationContainer)
     user = providers.Container(UserContainer)
