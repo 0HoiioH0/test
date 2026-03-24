@@ -29,11 +29,12 @@ def client() -> TestClient:
 def make_user(
     login_id: str = "20260001",
     email: str | None = "test@example.com",
+    role: UserRole = UserRole.STUDENT,
 ) -> User:
     return User(
         organization_id=ORGANIZATION_ID,
         login_id=login_id,
-        role=UserRole.STUDENT,
+        role=role,
         email=email,
         name="김테스트",
     )
@@ -51,7 +52,14 @@ def test_create_user_returns_serialized_id(client, monkeypatch):
     async def create_stub_user(*_args, **_kwargs):
         return make_user()
 
+    admin_user = make_user(login_id="admin01", role=UserRole.ADMIN)
+
+    async def get_by_id_stub(*_args, **_kwargs):
+        return admin_user
+
     monkeypatch.setattr(UserService, "create_user", create_stub_user)
+    monkeypatch.setattr(UserSQLAlchemyRepository, "get_by_id", get_by_id_stub)
+    set_access_token_cookie(client, admin_user)
 
     response = client.post(
         "/api/users",
@@ -68,6 +76,30 @@ def test_create_user_returns_serialized_id(client, monkeypatch):
     body = response.json()
     assert isinstance(body["data"]["id"], str)
     assert body["data"]["login_id"] == "20260001"
+
+
+def test_create_user_returns_403_for_non_admin(client, monkeypatch):
+    student_user = make_user(role=UserRole.STUDENT)
+
+    async def get_by_id_stub(*_args, **_kwargs):
+        return student_user
+
+    monkeypatch.setattr(UserSQLAlchemyRepository, "get_by_id", get_by_id_stub)
+    set_access_token_cookie(client, student_user)
+
+    response = client.post(
+        "/api/users",
+        json={
+            "organization_id": str(ORGANIZATION_ID),
+            "login_id": "20260001",
+            "role": "student",
+            "email": "test@example.com",
+            "name": "김테스트",
+        },
+    )
+
+    assert response.status_code == 403
+    assert response.json()["error_code"] == "AUTH__FORBIDDEN"
 
 
 def test_list_users_returns_401_without_access_token(client):
@@ -161,7 +193,14 @@ def test_delete_user_returns_200(client, monkeypatch):
         user.delete()
         return user
 
+    admin_user = make_user(login_id="admin01", role=UserRole.ADMIN)
+
+    async def get_by_id_stub(*_args, **_kwargs):
+        return admin_user
+
     monkeypatch.setattr(UserService, "delete_user", delete_stub_user)
+    monkeypatch.setattr(UserSQLAlchemyRepository, "get_by_id", get_by_id_stub)
+    set_access_token_cookie(client, admin_user)
 
     response = client.delete(f"/api/users/{uuid4()}")
 
@@ -169,11 +208,33 @@ def test_delete_user_returns_200(client, monkeypatch):
     assert response.json()["data"]["is_deleted"] is True
 
 
+def test_delete_user_returns_403_for_non_admin(client, monkeypatch):
+    student_user = make_user(role=UserRole.STUDENT)
+
+    async def get_by_id_stub(*_args, **_kwargs):
+        return student_user
+
+    monkeypatch.setattr(UserSQLAlchemyRepository, "get_by_id", get_by_id_stub)
+    set_access_token_cookie(client, student_user)
+
+    response = client.delete(f"/api/users/{uuid4()}")
+
+    assert response.status_code == 403
+    assert response.json()["error_code"] == "AUTH__FORBIDDEN"
+
+
 def test_create_user_duplicate_account_returns_409(client, monkeypatch):
     async def raise_duplicate_account(*_args, **_kwargs):
         raise UserAccountAlreadyExistsException()
 
+    admin_user = make_user(login_id="admin01", role=UserRole.ADMIN)
+
+    async def get_by_id_stub(*_args, **_kwargs):
+        return admin_user
+
     monkeypatch.setattr(UserService, "create_user", raise_duplicate_account)
+    monkeypatch.setattr(UserSQLAlchemyRepository, "get_by_id", get_by_id_stub)
+    set_access_token_cookie(client, admin_user)
 
     response = client.post(
         "/api/users",
@@ -245,7 +306,20 @@ def test_create_user_duplicate_account_returns_409(client, monkeypatch):
         ),
     ],
 )
-def test_create_user_invalid_input_returns_422(client, payload, field_name):
+def test_create_user_invalid_input_returns_422(
+    client,
+    monkeypatch,
+    payload,
+    field_name,
+):
+    admin_user = make_user(login_id="admin01", role=UserRole.ADMIN)
+
+    async def get_by_id_stub(*_args, **_kwargs):
+        return admin_user
+
+    monkeypatch.setattr(UserSQLAlchemyRepository, "get_by_id", get_by_id_stub)
+    set_access_token_cookie(client, admin_user)
+
     response = client.post("/api/users", json=payload)
 
     assert response.status_code == 422

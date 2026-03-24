@@ -1,4 +1,5 @@
 from app.auth.application.exception.auth import (
+    AuthForbiddenException,
     AuthIdentityProviderNotConfiguredException,
     AuthIdentityProviderUnavailableException,
     AuthInvalidCredentialsException,
@@ -7,6 +8,7 @@ from app.auth.application.exception.auth import (
 )
 
 __all__ = [
+    "AuthForbiddenException",
     "AuthIdentityProviderNotConfiguredException",
     "AuthIdentityProviderUnavailableException",
     "AuthInvalidCredentialsException",

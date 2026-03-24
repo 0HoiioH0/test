@@ -4,10 +4,13 @@ import jwt
 from dependency_injector.wiring import Provide, inject
 from fastapi import Cookie, Depends
 
-from app.auth.application.exception import AuthUnauthorizedException
+from app.auth.application.exception import (
+    AuthForbiddenException,
+    AuthUnauthorizedException,
+)
 from app.auth.container import AuthContainer
 from app.auth.domain.entity import CurrentUser
-from app.user.domain.entity import UserStatus
+from app.user.domain.entity import UserRole, UserStatus
 from app.user.domain.repository import UserRepository
 from core.config import config
 from core.domain.types import TokenType
@@ -40,3 +43,12 @@ async def require_authenticated_user(
         raise AuthUnauthorizedException()
 
     return CurrentUser.from_user(user)
+
+
+async def require_admin_user(
+    current_user: CurrentUser = Depends(require_authenticated_user),
+) -> CurrentUser:
+    if current_user.role != UserRole.ADMIN:
+        raise AuthForbiddenException()
+
+    return current_user

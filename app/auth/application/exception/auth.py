@@ -19,6 +19,12 @@ class AuthUnauthorizedException(CustomException):
     message = "인증이 필요합니다."
 
 
+class AuthForbiddenException(CustomException):
+    code = 403
+    error_code = "AUTH__FORBIDDEN"
+    message = "접근 권한이 없습니다."
+
+
 class AuthIdentityProviderNotConfiguredException(CustomException):
     code = 503
     error_code = "AUTH__IDENTITY_PROVIDER_NOT_CONFIGURED"
