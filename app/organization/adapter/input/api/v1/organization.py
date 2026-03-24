@@ -3,7 +3,6 @@ from uuid import UUID
 from dependency_injector.wiring import Provide, inject
 from fastapi import APIRouter, Depends
 
-from app.auth.adapter.input.api.v1.deps import IsAdmin, PermissionDependency
 from app.organization.adapter.input.api.v1.request import (
     CreateOrganizationRequest,
     UpdateOrganizationRequest,
@@ -20,6 +19,7 @@ from app.organization.domain.command import (
 )
 from app.organization.domain.entity import Organization
 from app.organization.domain.usecase import OrganizationUseCase
+from core.fastapi.dependencies import IsAdmin, PermissionDependency
 
 router = APIRouter(prefix="/organizations", tags=["organizations"])
 

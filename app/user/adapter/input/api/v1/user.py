@@ -3,11 +3,6 @@ from uuid import UUID
 from dependency_injector.wiring import Provide, inject
 from fastapi import APIRouter, Depends
 
-from app.auth.adapter.input.api.v1.deps import (
-    IsAdmin,
-    IsAuthenticated,
-    PermissionDependency,
-)
 from app.user.adapter.input.api.v1.request import (
     CreateUserRequest,
     UpdateUserRequest,
@@ -20,6 +15,11 @@ from app.user.adapter.input.api.v1.response import (
 from app.user.container import UserContainer
 from app.user.domain.command import CreateUserCommand, UpdateUserCommand
 from app.user.domain.usecase import UserUseCase
+from core.fastapi.dependencies import (
+    IsAdmin,
+    IsAuthenticated,
+    PermissionDependency,
+)
 
 router = APIRouter(prefix="/users", tags=["users"])
 

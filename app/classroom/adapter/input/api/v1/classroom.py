@@ -3,12 +3,6 @@ from uuid import UUID
 from dependency_injector.wiring import Provide, inject
 from fastapi import APIRouter, Depends
 
-from app.auth.adapter.input.api.v1.deps import (
-    IsAuthenticated,
-    IsProfessorOrAdmin,
-    PermissionDependency,
-    get_current_user,
-)
 from app.auth.domain.entity import CurrentUser
 from app.classroom.adapter.input.api.v1.request import (
     CreateClassroomRequest,
@@ -28,6 +22,12 @@ from app.classroom.domain.command import (
     UpdateClassroomCommand,
 )
 from app.classroom.domain.usecase import ClassroomUseCase
+from core.fastapi.dependencies import (
+    IsAuthenticated,
+    IsProfessorOrAdmin,
+    PermissionDependency,
+    get_current_user,
+)
 
 router = APIRouter(prefix="/classrooms", tags=["classrooms"])
 

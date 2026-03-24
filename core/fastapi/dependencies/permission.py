@@ -26,35 +26,28 @@ async def get_current_user(
     if user is None or user.status == UserStatus.BLOCKED:
         raise AuthUnauthorizedException()
 
-    return CurrentUser.from_user(user)
+    current_user = CurrentUser.from_user(user)
+    request.state.current_user = current_user
+    return current_user
 
 
 class BasePermission(ABC):
     exception = AuthForbiddenException
 
     @abstractmethod
-    async def has_permission(
-        self,
-        request: Request,
-    ) -> bool:
+    async def has_permission(self, request: Request) -> bool:
         pass
 
 
 class IsAuthenticated(BasePermission):
     exception = AuthUnauthorizedException
 
-    async def has_permission(
-        self,
-        request: Request,
-    ) -> bool:
+    async def has_permission(self, request: Request) -> bool:
         return getattr(request.user, "id", None) is not None
 
 
 class IsAdmin(BasePermission):
-    async def has_permission(
-        self,
-        request: Request,
-    ) -> bool:
+    async def has_permission(self, request: Request) -> bool:
         current_user = getattr(request.state, "current_user", None)
         if current_user is None:
             return False
@@ -62,10 +55,7 @@ class IsAdmin(BasePermission):
 
 
 class IsProfessorOrAdmin(BasePermission):
-    async def has_permission(
-        self,
-        request: Request,
-    ) -> bool:
+    async def has_permission(self, request: Request) -> bool:
         current_user = getattr(request.state, "current_user", None)
         if current_user is None:
             return False
@@ -79,9 +69,8 @@ class PermissionDependency:
     async def __call__(
         self,
         request: Request,
-        current_user: CurrentUser = Depends(get_current_user),
+        _: CurrentUser = Depends(get_current_user),
     ) -> None:
-        request.state.current_user = current_user
         for permission in self.permissions:
             checker = permission()
             if not await checker.has_permission(request):
