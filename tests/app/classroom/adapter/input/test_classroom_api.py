@@ -4,7 +4,7 @@ import pytest
 from fastapi.testclient import TestClient
 
 from app.classroom.application.exception import (
-    ClassroomCodeAlreadyExistsException,
+    ClassroomAlreadyExistsException,
     ClassroomNotFoundException,
 )
 from app.classroom.application.service import ClassroomService
@@ -19,7 +19,10 @@ from core.helpers.token import TokenHelper
 from main import create_app
 
 ORG_ID = UUID("11111111-1111-1111-1111-111111111111")
-OWNER_ID = UUID("22222222-2222-2222-2222-222222222222")
+PROFESSOR_ID = UUID("22222222-2222-2222-2222-222222222222")
+STUDENT_ID = UUID("33333333-3333-3333-3333-333333333333")
+OTHER_PROFESSOR_ID = UUID("44444444-4444-4444-4444-444444444444")
+ADMIN_ID = UUID("55555555-5555-5555-5555-555555555555")
 OTHER_ORG_ID = UUID("99999999-9999-9999-9999-999999999999")
 
 
@@ -28,24 +31,29 @@ def client() -> TestClient:
     return TestClient(create_app())
 
 
-def make_classroom() -> Classroom:
+def make_classroom(
+    *,
+    professor_ids: list[UUID] | None = None,
+    student_ids: list[UUID] | None = None,
+) -> Classroom:
     classroom = Classroom(
         organization_id=ORG_ID,
-        instructor_id=OWNER_ID,
-        code="ai-101",
         name="AI 기초",
-        term="2026-1",
+        professor_ids=professor_ids or [PROFESSOR_ID],
+        grade=3,
+        semester="1학기",
         section="01",
         description="AI 입문 강의실",
+        student_ids=student_ids or [STUDENT_ID],
     )
-    classroom.id = UUID("33333333-3333-3333-3333-333333333333")
+    classroom.id = UUID("66666666-6666-6666-6666-666666666666")
     return classroom
 
 
 def make_user(
     *,
     role: UserRole = UserRole.STUDENT,
-    user_id: UUID = OWNER_ID,
+    user_id: UUID = STUDENT_ID,
     organization_id: UUID = ORG_ID,
 ) -> User:
     user = User(
@@ -67,9 +75,14 @@ def set_access_token_cookie(client: TestClient, user: User) -> None:
     client.cookies.set(config.ACCESS_TOKEN_COOKIE_NAME, access_token)
 
 
-def test_list_classrooms_returns_200(client, monkeypatch):
+def test_list_classrooms_returns_only_accessible_classrooms(
+    client, monkeypatch
+):
     async def list_stub_classrooms(*_args, **_kwargs):
-        return [make_classroom()]
+        return [
+            make_classroom(student_ids=[STUDENT_ID]),
+            make_classroom(student_ids=[uuid4()]),
+        ]
 
     current_user = make_user()
 
@@ -77,7 +90,9 @@ def test_list_classrooms_returns_200(client, monkeypatch):
         return current_user
 
     monkeypatch.setattr(
-        ClassroomService, "list_classrooms", list_stub_classrooms
+        ClassroomService,
+        "list_classrooms",
+        list_stub_classrooms,
     )
     monkeypatch.setattr(UserSQLAlchemyRepository, "get_by_id", get_by_id_stub)
     set_access_token_cookie(client, current_user)
@@ -85,7 +100,8 @@ def test_list_classrooms_returns_200(client, monkeypatch):
     response = client.get("/api/classrooms")
 
     assert response.status_code == 200
-    assert response.json()["data"][0]["code"] == "ai-101"
+    assert len(response.json()["data"]) == 1
+    assert response.json()["data"][0]["name"] == "AI 기초"
 
 
 def test_list_classrooms_requires_login(client):
@@ -97,9 +113,9 @@ def test_list_classrooms_requires_login(client):
 
 def test_create_classroom_returns_200_for_professor(client, monkeypatch):
     async def create_stub_classroom(*_args, **_kwargs):
-        return make_classroom()
+        return make_classroom(professor_ids=[PROFESSOR_ID, OTHER_PROFESSOR_ID])
 
-    professor_user = make_user(role=UserRole.PROFESSOR)
+    professor_user = make_user(role=UserRole.PROFESSOR, user_id=PROFESSOR_ID)
 
     async def get_by_id_stub(*_args, **_kwargs):
         return professor_user
@@ -115,17 +131,21 @@ def test_create_classroom_returns_200_for_professor(client, monkeypatch):
     response = client.post(
         "/api/classrooms",
         json={
-            "code": "ai-101",
             "name": "AI 기초",
-            "term": "2026-1",
+            "professor_ids": [str(OTHER_PROFESSOR_ID)],
+            "grade": 3,
+            "semester": "1학기",
             "section": "01",
             "description": "AI 입문 강의실",
-            "is_active": True,
+            "student_ids": [str(STUDENT_ID)],
         },
     )
 
     assert response.status_code == 200
-    assert response.json()["data"]["name"] == "AI 기초"
+    assert response.json()["data"]["professor_ids"] == [
+        str(PROFESSOR_ID),
+        str(OTHER_PROFESSOR_ID),
+    ]
 
 
 def test_create_classroom_returns_403_for_student(client, monkeypatch):
@@ -140,12 +160,12 @@ def test_create_classroom_returns_403_for_student(client, monkeypatch):
     response = client.post(
         "/api/classrooms",
         json={
-            "code": "ai-101",
             "name": "AI 기초",
-            "term": "2026-1",
+            "professor_ids": [str(PROFESSOR_ID)],
+            "grade": 3,
+            "semester": "1학기",
             "section": "01",
-            "description": "AI 입문 강의실",
-            "is_active": True,
+            "student_ids": [str(STUDENT_ID)],
         },
     )
 
@@ -172,7 +192,10 @@ def test_get_classroom_returns_403_for_other_organization(client, monkeypatch):
     assert response.json()["error_code"] == "AUTH__FORBIDDEN"
 
 
-def test_update_classroom_returns_200_for_owner_professor(client, monkeypatch):
+def test_update_classroom_returns_200_for_professor_member(
+    client,
+    monkeypatch,
+):
     async def get_stub_classroom(*_args, **_kwargs):
         return make_classroom()
 
@@ -181,7 +204,7 @@ def test_update_classroom_returns_200_for_owner_professor(client, monkeypatch):
         classroom.name = "AI 심화"
         return classroom
 
-    professor_user = make_user(role=UserRole.PROFESSOR)
+    professor_user = make_user(role=UserRole.PROFESSOR, user_id=PROFESSOR_ID)
 
     async def get_by_id_stub(*_args, **_kwargs):
         return professor_user
@@ -204,7 +227,7 @@ def test_update_classroom_returns_200_for_owner_professor(client, monkeypatch):
     assert response.json()["data"]["name"] == "AI 심화"
 
 
-def test_update_classroom_returns_403_for_non_owner_professor(
+def test_update_classroom_returns_403_for_non_member_professor(
     client,
     monkeypatch,
 ):
@@ -213,7 +236,7 @@ def test_update_classroom_returns_403_for_non_owner_professor(
 
     professor_user = make_user(
         role=UserRole.PROFESSOR,
-        user_id=UUID("44444444-4444-4444-4444-444444444444"),
+        user_id=OTHER_PROFESSOR_ID,
     )
 
     async def get_by_id_stub(*_args, **_kwargs):
@@ -237,14 +260,9 @@ def test_delete_classroom_returns_200_for_admin(client, monkeypatch):
         return make_classroom()
 
     async def delete_stub_classroom(*_args, **_kwargs):
-        classroom = make_classroom()
-        classroom.delete()
-        return classroom
+        return make_classroom()
 
-    admin_user = make_user(
-        role=UserRole.ADMIN,
-        user_id=UUID("55555555-5555-5555-5555-555555555555"),
-    )
+    admin_user = make_user(role=UserRole.ADMIN, user_id=ADMIN_ID)
 
     async def get_by_id_stub(*_args, **_kwargs):
         return admin_user
@@ -261,14 +279,14 @@ def test_delete_classroom_returns_200_for_admin(client, monkeypatch):
     response = client.delete(f"/api/classrooms/{make_classroom().id}")
 
     assert response.status_code == 200
-    assert response.json()["data"]["is_active"] is False
+    assert response.json()["data"]["name"] == "AI 기초"
 
 
-def test_create_classroom_duplicate_code_returns_409(client, monkeypatch):
-    async def raise_duplicate_code(*_args, **_kwargs):
-        raise ClassroomCodeAlreadyExistsException()
+def test_create_classroom_duplicate_returns_409(client, monkeypatch):
+    async def raise_duplicate_classroom(*_args, **_kwargs):
+        raise ClassroomAlreadyExistsException()
 
-    professor_user = make_user(role=UserRole.PROFESSOR)
+    professor_user = make_user(role=UserRole.PROFESSOR, user_id=PROFESSOR_ID)
 
     async def get_by_id_stub(*_args, **_kwargs):
         return professor_user
@@ -276,7 +294,7 @@ def test_create_classroom_duplicate_code_returns_409(client, monkeypatch):
     monkeypatch.setattr(
         ClassroomService,
         "create_classroom",
-        raise_duplicate_code,
+        raise_duplicate_classroom,
     )
     monkeypatch.setattr(UserSQLAlchemyRepository, "get_by_id", get_by_id_stub)
     set_access_token_cookie(client, professor_user)
@@ -284,17 +302,17 @@ def test_create_classroom_duplicate_code_returns_409(client, monkeypatch):
     response = client.post(
         "/api/classrooms",
         json={
-            "code": "ai-101",
             "name": "AI 기초",
-            "term": "2026-1",
+            "professor_ids": [str(PROFESSOR_ID)],
+            "grade": 3,
+            "semester": "1학기",
             "section": "01",
-            "description": "AI 입문 강의실",
-            "is_active": True,
+            "student_ids": [str(STUDENT_ID)],
         },
     )
 
     assert response.status_code == 409
-    assert response.json()["error_code"] == "CLASSROOM__CODE_ALREADY_EXISTS"
+    assert response.json()["error_code"] == "CLASSROOM__ALREADY_EXISTS"
 
 
 def test_get_classroom_not_found_returns_404(client, monkeypatch):
@@ -317,7 +335,7 @@ def test_get_classroom_not_found_returns_404(client, monkeypatch):
 
 
 def test_create_classroom_invalid_input_returns_422(client, monkeypatch):
-    professor_user = make_user(role=UserRole.PROFESSOR)
+    professor_user = make_user(role=UserRole.PROFESSOR, user_id=PROFESSOR_ID)
 
     async def get_by_id_stub(*_args, **_kwargs):
         return professor_user
@@ -328,9 +346,11 @@ def test_create_classroom_invalid_input_returns_422(client, monkeypatch):
     response = client.post(
         "/api/classrooms",
         json={
-            "code": "a",
             "name": "A",
-            "term": "1",
+            "professor_ids": [],
+            "grade": 0,
+            "semester": "",
+            "section": "",
         },
     )
 
@@ -338,8 +358,8 @@ def test_create_classroom_invalid_input_returns_422(client, monkeypatch):
     assert response.json()["error_code"] == "SERVER__REQUEST_VALIDATION_ERROR"
 
 
-def test_update_classroom_empty_payload_returns_422(client, monkeypatch):
-    professor_user = make_user(role=UserRole.PROFESSOR)
+def test_update_classroom_empty_patch_returns_422(client, monkeypatch):
+    professor_user = make_user(role=UserRole.PROFESSOR, user_id=PROFESSOR_ID)
 
     async def get_by_id_stub(*_args, **_kwargs):
         return professor_user

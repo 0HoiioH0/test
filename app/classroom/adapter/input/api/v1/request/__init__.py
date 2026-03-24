@@ -1,26 +1,30 @@
+from uuid import UUID
+
 from pydantic import Field, model_validator
 
 from core.common.request.base import BaseRequest
 
 
 class CreateClassroomRequest(BaseRequest):
-    code: str = Field(..., min_length=2, max_length=50)
     name: str = Field(..., min_length=2, max_length=100)
-    term: str = Field(..., min_length=2, max_length=50)
-    section: str | None = Field(None, min_length=1, max_length=50)
+    professor_ids: list[UUID] = Field(..., min_length=1)
+    grade: int = Field(..., ge=1, le=6)
+    semester: str = Field(..., min_length=1, max_length=20)
+    section: str = Field(..., min_length=1, max_length=50)
     description: str | None = Field(None, max_length=500)
-    is_active: bool = Field(default=True)
+    student_ids: list[UUID] = Field(default_factory=list)
 
 
 class UpdateClassroomRequest(BaseRequest):
-    null_fields = {"section", "description"}
+    null_fields = {"description"}
 
-    code: str | None = Field(None, min_length=2, max_length=50)
     name: str | None = Field(None, min_length=2, max_length=100)
-    term: str | None = Field(None, min_length=2, max_length=50)
+    professor_ids: list[UUID] | None = Field(None, min_length=1)
+    grade: int | None = Field(None, ge=1, le=6)
+    semester: str | None = Field(None, min_length=1, max_length=20)
     section: str | None = Field(None, min_length=1, max_length=50)
     description: str | None = Field(None, max_length=500)
-    is_active: bool | None = Field(None)
+    student_ids: list[UUID] | None = Field(None)
 
     @model_validator(mode="after")
     def validate_non_empty_update(self):

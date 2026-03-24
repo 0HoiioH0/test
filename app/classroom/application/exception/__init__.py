@@ -1,9 +1,17 @@
 from app.classroom.application.exception.classroom import (
-    ClassroomCodeAlreadyExistsException,
+    ClassroomAlreadyExistsException,
+    ClassroomInvalidProfessorRoleException,
+    ClassroomInvalidStudentRoleException,
     ClassroomNotFoundException,
+    ClassroomProfessorNotFoundException,
+    ClassroomStudentNotFoundException,
 )
 
 __all__ = [
-    "ClassroomCodeAlreadyExistsException",
+    "ClassroomAlreadyExistsException",
+    "ClassroomInvalidProfessorRoleException",
+    "ClassroomInvalidStudentRoleException",
     "ClassroomNotFoundException",
+    "ClassroomProfessorNotFoundException",
+    "ClassroomStudentNotFoundException",
 ]

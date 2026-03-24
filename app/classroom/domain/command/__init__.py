@@ -1,23 +1,24 @@
 from uuid import UUID
 
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 
 
 class CreateClassroomCommand(BaseModel):
     organization_id: UUID
-    instructor_id: UUID
-    code: str
     name: str
-    term: str
-    section: str | None = None
+    professor_ids: list[UUID]
+    grade: int
+    semester: str
+    section: str
     description: str | None = None
-    is_active: bool = True
+    student_ids: list[UUID] = Field(default_factory=list)
 
 
 class UpdateClassroomCommand(BaseModel):
-    code: str | None = None
     name: str | None = None
-    term: str | None = None
+    professor_ids: list[UUID] | None = None
+    grade: int | None = None
+    semester: str | None = None
     section: str | None = None
     description: str | None = None
-    is_active: bool | None = None
+    student_ids: list[UUID] | None = None

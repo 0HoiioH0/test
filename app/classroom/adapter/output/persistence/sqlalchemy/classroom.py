@@ -15,14 +15,20 @@ class ClassroomSQLAlchemyRepository(ClassroomRepository):
         result = await session.execute(query)
         return result.scalar_one_or_none()
 
-    async def get_by_organization_and_code(
+    async def get_by_organization_and_name_and_term(
         self,
         organization_id: UUID,
-        code: str,
+        name: str,
+        grade: int,
+        semester: str,
+        section: str,
     ) -> Classroom | None:
         query = select(Classroom).where(
             classroom_table.c.organization_id == organization_id,
-            classroom_table.c.code == code,
+            classroom_table.c.name == name,
+            classroom_table.c.grade == grade,
+            classroom_table.c.semester == semester,
+            classroom_table.c.section == section,
         )
         result = await session.execute(query)
         return result.scalar_one_or_none()
@@ -47,3 +53,6 @@ class ClassroomSQLAlchemyRepository(ClassroomRepository):
     async def save(self, entity: Classroom) -> Classroom:
         session.add(entity)
         return entity
+
+    async def delete(self, entity: Classroom) -> None:
+        await session.delete(entity)

@@ -1,4 +1,4 @@
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from uuid import UUID
 
 from core.common.entity import Entity
@@ -7,13 +7,10 @@ from core.common.entity import Entity
 @dataclass
 class Classroom(Entity):
     organization_id: UUID
-    instructor_id: UUID
-    code: str
     name: str
-    term: str
-    section: str | None = None
+    professor_ids: list[UUID] = field(default_factory=list)
+    grade: int = 1
+    semester: str = "1"
+    section: str = "01"
     description: str | None = None
-    is_active: bool = True
-
-    def delete(self) -> None:
-        self.is_active = False
+    student_ids: list[UUID] = field(default_factory=list)

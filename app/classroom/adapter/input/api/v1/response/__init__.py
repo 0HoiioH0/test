@@ -5,14 +5,13 @@ from core.common.response.base import BaseResponse
 
 class ClassroomPayload(BaseModel):
     id: str
-    organization_id: str
-    instructor_id: str
-    code: str
     name: str
-    term: str
-    section: str | None = None
+    professor_ids: list[str]
+    grade: int
+    semester: str
+    section: str
     description: str | None = None
-    is_active: bool
+    student_ids: list[str]
 
 
 class ClassroomResponse(BaseResponse):
