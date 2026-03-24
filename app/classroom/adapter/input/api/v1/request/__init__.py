@@ -13,6 +13,11 @@ class CreateClassroomRequest(BaseRequest):
     section: str = Field(..., min_length=1, max_length=50)
     description: str | None = Field(None, max_length=500)
     student_ids: list[UUID] = Field(default_factory=list)
+    allow_student_material_access: bool = Field(False)
+
+
+class InviteClassroomStudentsRequest(BaseRequest):
+    student_ids: list[UUID] = Field(..., min_length=1)
 
 
 class UpdateClassroomRequest(BaseRequest):
@@ -25,6 +30,7 @@ class UpdateClassroomRequest(BaseRequest):
     section: str | None = Field(None, min_length=1, max_length=50)
     description: str | None = Field(None, max_length=500)
     student_ids: list[UUID] | None = Field(None)
+    allow_student_material_access: bool | None = Field(None)
 
     @model_validator(mode="after")
     def validate_non_empty_update(self):

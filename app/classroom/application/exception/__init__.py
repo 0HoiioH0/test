@@ -4,6 +4,8 @@ from app.classroom.application.exception.classroom import (
     ClassroomInvalidStudentRoleException,
     ClassroomNotFoundException,
     ClassroomProfessorNotFoundException,
+    ClassroomStudentAlreadyInvitedException,
+    ClassroomStudentNotEnrolledException,
     ClassroomStudentNotFoundException,
 )
 
@@ -13,5 +15,7 @@ __all__ = [
     "ClassroomInvalidStudentRoleException",
     "ClassroomNotFoundException",
     "ClassroomProfessorNotFoundException",
+    "ClassroomStudentAlreadyInvitedException",
+    "ClassroomStudentNotEnrolledException",
     "ClassroomStudentNotFoundException",
 ]

@@ -4,6 +4,8 @@ from uuid import UUID
 from app.auth.domain.entity import CurrentUser
 from app.classroom.domain.command import (
     CreateClassroomCommand,
+    InviteClassroomStudentsCommand,
+    RemoveClassroomStudentCommand,
     UpdateClassroomCommand,
 )
 from app.classroom.domain.entity import Classroom
@@ -13,6 +15,7 @@ class ClassroomUseCase(ABC):
     @abstractmethod
     async def create_classroom(
         self,
+        *,
         current_user: CurrentUser,
         command: CreateClassroomCommand,
     ) -> Classroom:
@@ -21,6 +24,7 @@ class ClassroomUseCase(ABC):
     @abstractmethod
     async def get_classroom(
         self,
+        *,
         classroom_id: UUID,
         current_user: CurrentUser,
     ) -> Classroom:
@@ -29,6 +33,7 @@ class ClassroomUseCase(ABC):
     @abstractmethod
     async def list_classrooms(
         self,
+        *,
         current_user: CurrentUser,
     ) -> list[Classroom]:
         """List classrooms for organization."""
@@ -36,6 +41,7 @@ class ClassroomUseCase(ABC):
     @abstractmethod
     async def update_classroom(
         self,
+        *,
         classroom_id: UUID,
         current_user: CurrentUser,
         command: UpdateClassroomCommand,
@@ -45,7 +51,28 @@ class ClassroomUseCase(ABC):
     @abstractmethod
     async def delete_classroom(
         self,
+        *,
         classroom_id: UUID,
         current_user: CurrentUser,
     ) -> Classroom:
         """Delete classroom."""
+
+    @abstractmethod
+    async def invite_classroom_students(
+        self,
+        *,
+        classroom_id: UUID,
+        current_user: CurrentUser,
+        command: InviteClassroomStudentsCommand,
+    ) -> Classroom:
+        """Invite students to classroom."""
+
+    @abstractmethod
+    async def remove_classroom_student(
+        self,
+        *,
+        classroom_id: UUID,
+        current_user: CurrentUser,
+        command: RemoveClassroomStudentCommand,
+    ) -> Classroom:
+        """Remove student from classroom."""

@@ -1,4 +1,11 @@
-from sqlalchemy import Column, ForeignKey, Integer, String, UniqueConstraint
+from sqlalchemy import (
+    Boolean,
+    Column,
+    ForeignKey,
+    Integer,
+    String,
+    UniqueConstraint,
+)
 from sqlalchemy.dialects.postgresql import ARRAY
 from sqlalchemy.dialects.postgresql import UUID as PG_UUID
 
@@ -21,6 +28,12 @@ classroom_table = BaseTable(
     Column("section", String(50), nullable=False),
     Column("description", String(500), nullable=True),
     Column("student_ids", ARRAY(PG_UUID(as_uuid=True)), nullable=False),
+    Column(
+        "allow_student_material_access",
+        Boolean,
+        nullable=False,
+        default=False,
+    ),
     UniqueConstraint(
         "organization_id",
         "name",

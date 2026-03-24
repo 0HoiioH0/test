@@ -14,3 +14,4 @@ class Classroom(Entity):
     section: str = "01"
     description: str | None = None
     student_ids: list[UUID] = field(default_factory=list)
+    allow_student_material_access: bool = False

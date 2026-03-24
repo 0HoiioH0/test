@@ -12,6 +12,11 @@ class CreateClassroomCommand(BaseModel):
     section: str
     description: str | None = None
     student_ids: list[UUID] = Field(default_factory=list)
+    allow_student_material_access: bool = False
+
+
+class InviteClassroomStudentsCommand(BaseModel):
+    student_ids: list[UUID] = Field(default_factory=list)
 
 
 class UpdateClassroomCommand(BaseModel):
@@ -22,3 +27,8 @@ class UpdateClassroomCommand(BaseModel):
     section: str | None = None
     description: str | None = None
     student_ids: list[UUID] | None = None
+    allow_student_material_access: bool | None = None
+
+
+class RemoveClassroomStudentCommand(BaseModel):
+    student_id: UUID

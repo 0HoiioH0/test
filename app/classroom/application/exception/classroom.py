@@ -35,3 +35,15 @@ class ClassroomInvalidStudentRoleException(CustomException):
     code = 400
     error_code = "CLASSROOM__INVALID_STUDENT_ROLE"
     message = "학생 목록에는 학생만 포함할 수 있습니다."
+
+
+class ClassroomStudentAlreadyInvitedException(CustomException):
+    code = 409
+    error_code = "CLASSROOM__STUDENT_ALREADY_INVITED"
+    message = "이미 강의실에 등록된 학생이 포함되어 있습니다."
+
+
+class ClassroomStudentNotEnrolledException(CustomException):
+    code = 404
+    error_code = "CLASSROOM__STUDENT_NOT_ENROLLED"
+    message = "강의실에 등록되지 않은 학생입니다."

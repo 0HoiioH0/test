@@ -9,10 +9,14 @@ from app.classroom.application.exception import (
     ClassroomInvalidStudentRoleException,
     ClassroomNotFoundException,
     ClassroomProfessorNotFoundException,
+    ClassroomStudentAlreadyInvitedException,
+    ClassroomStudentNotEnrolledException,
     ClassroomStudentNotFoundException,
 )
 from app.classroom.domain.command import (
     CreateClassroomCommand,
+    InviteClassroomStudentsCommand,
+    RemoveClassroomStudentCommand,
     UpdateClassroomCommand,
 )
 from app.classroom.domain.entity import Classroom
@@ -75,6 +79,9 @@ class ClassroomService(ClassroomUseCase):
             section=command.section,
             description=command.description,
             student_ids=student_ids,
+            allow_student_material_access=(
+                command.allow_student_material_access
+            ),
         )
         return await self.repository.save(classroom)
 
@@ -190,6 +197,10 @@ class ClassroomService(ClassroomUseCase):
         classroom.section = section
         if "description" in delivered_fields:
             classroom.description = command.description
+        if "allow_student_material_access" in delivered_fields:
+            classroom.allow_student_material_access = (
+                command.allow_student_material_access
+            )
         classroom.professor_ids = professor_ids
         classroom.student_ids = student_ids
 
@@ -212,6 +223,71 @@ class ClassroomService(ClassroomUseCase):
         await self.repository.delete(classroom)
         return classroom
 
+    @transactional
+    async def invite_classroom_students(
+        self,
+        *,
+        classroom_id: UUID,
+        current_user: CurrentUser,
+        command: InviteClassroomStudentsCommand,
+    ) -> Classroom:
+        self._ensure_professor_or_admin(current_user)
+
+        classroom = await self.get_classroom(
+            classroom_id=classroom_id,
+            current_user=current_user,
+        )
+        self._ensure_classroom_manager(classroom, current_user)
+
+        invited_student_ids = _unique_ids(command.student_ids)
+        duplicate_ids = [
+            user_id
+            for user_id in invited_student_ids
+            if user_id in classroom.student_ids
+        ]
+        if duplicate_ids:
+            raise ClassroomStudentAlreadyInvitedException(
+                detail={
+                    "student_ids": [str(user_id) for user_id in duplicate_ids]
+                }
+            )
+
+        updated_student_ids = classroom.student_ids + invited_student_ids
+        await self._validate_students_for_classroom(
+            organization_id=classroom.organization_id,
+            student_ids=updated_student_ids,
+        )
+        classroom.student_ids = _unique_ids(updated_student_ids)
+        return await self.repository.save(classroom)
+
+    @transactional
+    async def remove_classroom_student(
+        self,
+        *,
+        classroom_id: UUID,
+        current_user: CurrentUser,
+        command: RemoveClassroomStudentCommand,
+    ) -> Classroom:
+        self._ensure_professor_or_admin(current_user)
+
+        classroom = await self.get_classroom(
+            classroom_id=classroom_id,
+            current_user=current_user,
+        )
+        self._ensure_classroom_manager(classroom, current_user)
+
+        if command.student_id not in classroom.student_ids:
+            raise ClassroomStudentNotEnrolledException(
+                detail={"student_id": str(command.student_id)}
+            )
+
+        classroom.student_ids = [
+            user_id
+            for user_id in classroom.student_ids
+            if user_id != command.student_id
+        ]
+        return await self.repository.save(classroom)
+
     async def _validate_members(
         self,
         *,
@@ -219,15 +295,30 @@ class ClassroomService(ClassroomUseCase):
         professor_ids: list[UUID],
         student_ids: list[UUID],
     ) -> None:
+        users_by_id = await self._get_organization_users(organization_id)
+
+        self._validate_professors(users_by_id, professor_ids)
+        self._validate_students(users_by_id, student_ids)
+
+    async def _validate_students_for_classroom(
+        self,
+        *,
+        organization_id: UUID,
+        student_ids: list[UUID],
+    ) -> None:
+        users_by_id = await self._get_organization_users(organization_id)
+        self._validate_students(users_by_id, student_ids)
+
+    async def _get_organization_users(
+        self,
+        organization_id: UUID,
+    ) -> dict[UUID, User]:
         users = await self.user_repository.list()
-        users_by_id = {
+        return {
             user.id: user
             for user in users
             if user.organization_id == organization_id and not user.is_deleted
         }
-
-        self._validate_professors(users_by_id, professor_ids)
-        self._validate_students(users_by_id, student_ids)
 
     @staticmethod
     def _validate_professors(

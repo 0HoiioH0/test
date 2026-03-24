@@ -12,6 +12,7 @@ class ClassroomPayload(BaseModel):
     section: str
     description: str | None = None
     student_ids: list[str]
+    allow_student_material_access: bool
 
 
 class ClassroomResponse(BaseResponse):
