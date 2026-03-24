@@ -36,7 +36,25 @@ jobs:
         run: uv run ruff check --output-format=github .
 
       - name: Run Ruff Format Check
-        run: uv run ruff format --check .
+        run: |
+          set +e
+          uv run ruff format --check .
+          format_exit_code=$?
+
+          {
+            echo "## Ruff Format Summary"
+            echo
+            if [ "$format_exit_code" -eq 0 ]; then
+              echo "- Status: passed"
+              echo '- Command: `uv run ruff format --check .`'
+            else
+              echo "- Status: failed"
+              echo '- Command: `uv run ruff format --check .`'
+              echo "- Note: formatting changes are required before merge"
+            fi
+          } >> "$GITHUB_STEP_SUMMARY"
+
+          exit $format_exit_code
 
   test:
     name: Run Pytest
