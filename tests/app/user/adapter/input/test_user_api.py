@@ -19,12 +19,18 @@ def client() -> TestClient:
     return TestClient(app)
 
 
-def make_user(username: str = "testuser", email: str = "test@example.com") -> User:
+def make_user(
+    username: str = "testuser", email: str = "test@example.com"
+) -> User:
     return User(
         username=username,
         password="hashed_password",
         email=email,
-        profile=Profile(nickname="tester", real_name="김테스트", phone_number="010-1234-5678"),
+        profile=Profile(
+            nickname="tester",
+            real_name="김테스트",
+            phone_number="010-1234-5678",
+        ),
     )
 
 
@@ -256,7 +262,9 @@ def test_create_user_invalid_input_returns_422(client, payload, field_name):
     assert response.status_code == 422
     body = response.json()
     assert body["error_code"] == "SERVER__REQUEST_VALIDATION_ERROR"
-    assert any(field_name in ".".join(map(str, item["loc"])) for item in body["detail"])
+    assert any(
+        field_name in ".".join(map(str, item["loc"])) for item in body["detail"]
+    )
 
 
 def test_update_user_invalid_input_returns_422(client):

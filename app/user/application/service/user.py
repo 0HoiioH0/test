@@ -1,6 +1,9 @@
 from uuid import UUID
 
-from app.user.application.dto.request import CreateUserRequest, UpdateUserRequest
+from app.user.application.dto.command import (
+    CreateUserCommand,
+    UpdateUserCommand,
+)
 from app.user.application.exceptions.user import (
     UserEmailAlreadyExistsException,
     UserNameAlreadyExistsException,
@@ -17,18 +20,27 @@ class UserService:
         self.user_repo = user_repo
 
     @transactional
-    async def create_user(self, request: CreateUserRequest) -> User:
-        existing_user = await self.user_repo.get_by_username(request.username)
+    async def create_user(self, command: CreateUserCommand) -> User:
+        existing_user = await self.user_repo.get_by_username(command.username)
         if existing_user:
             raise UserNameAlreadyExistsException()
 
-        existing_user = await self.user_repo.get_by_email(request.email)
+        existing_user = await self.user_repo.get_by_email(command.email)
         if existing_user:
             raise UserEmailAlreadyExistsException()
 
-        hashed_password = Argon2Helper.hash(request.password)
-        profile = Profile(nickname=request.nickname, real_name=request.real_name, phone_number=request.phone_number)
-        user = User(username=request.username, password=hashed_password, email=request.email, profile=profile)
+        hashed_password = Argon2Helper.hash(command.password)
+        profile = Profile(
+            nickname=command.nickname,
+            real_name=command.real_name,
+            phone_number=command.phone_number,
+        )
+        user = User(
+            username=command.username,
+            password=hashed_password,
+            email=command.email,
+            profile=profile,
+        )
 
         return await self.user_repo.save(user)
 
@@ -42,34 +54,42 @@ class UserService:
         return list(await self.user_repo.list())
 
     @transactional
-    async def update_user(self, user_id: UUID, request: UpdateUserRequest) -> User:
+    async def update_user(
+        self, user_id: UUID, command: UpdateUserCommand
+    ) -> User:
         user = await self.user_repo.get_by_id(user_id)
         if user is None:
             raise UserNotFoundException()
 
-        if request.username is not None and request.username != user.username:
-            existing_user = await self.user_repo.get_by_username(request.username)
+        if command.username is not None and command.username != user.username:
+            existing_user = await self.user_repo.get_by_username(
+                command.username
+            )
             if existing_user is not None and existing_user.id != user.id:
                 raise UserNameAlreadyExistsException()
-            user.username = request.username
+            user.username = command.username
 
-        if request.email is not None and request.email != user.email:
-            existing_user = await self.user_repo.get_by_email(request.email)
+        if command.email is not None and command.email != user.email:
+            existing_user = await self.user_repo.get_by_email(command.email)
             if existing_user is not None and existing_user.id != user.id:
                 raise UserEmailAlreadyExistsException()
-            user.email = request.email
+            user.email = command.email
 
-        if request.password is not None:
-            user.password = Argon2Helper.hash(request.password)
+        if command.password is not None:
+            user.password = Argon2Helper.hash(command.password)
 
         phone_number = (
-            request.phone_number
-            if "phone_number" in request.model_fields_set
+            command.phone_number
+            if "phone_number" in command.model_fields_set
             else user.profile.phone_number
         )
         user.profile = Profile(
-            nickname=request.nickname if request.nickname is not None else user.profile.nickname,
-            real_name=request.real_name if request.real_name is not None else user.profile.real_name,
+            nickname=command.nickname
+            if command.nickname is not None
+            else user.profile.nickname,
+            real_name=command.real_name
+            if command.real_name is not None
+            else user.profile.real_name,
             phone_number=phone_number,
             profile_image_id=user.profile.profile_image_id,
         )

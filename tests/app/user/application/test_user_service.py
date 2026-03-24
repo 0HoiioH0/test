@@ -2,7 +2,10 @@ from uuid import UUID
 
 import pytest
 
-from app.user.application.dto.request import CreateUserRequest, UpdateUserRequest
+from app.user.application.dto.command import (
+    CreateUserCommand,
+    UpdateUserCommand,
+)
 from app.user.application.exceptions.user import (
     UserEmailAlreadyExistsException,
     UserNameAlreadyExistsException,
@@ -21,11 +24,16 @@ class InMemoryUserRepository(UserRepository):
         self.users[entity.email] = entity
         return entity
 
-    async def get_by_id(self, user_id: UUID) -> User | None:
-        return next((user for user in self.users.values() if user.id == user_id), None)
+    async def get_by_id(self, entity_id: UUID) -> User | None:
+        return next(
+            (user for user in self.users.values() if user.id == entity_id), None
+        )
 
     async def get_by_username(self, username: str) -> User | None:
-        return next((user for user in self.users.values() if user.username == username), None)
+        return next(
+            (user for user in self.users.values() if user.username == username),
+            None,
+        )
 
     async def get_by_email(self, email: str) -> User | None:
         return self.users.get(email)
@@ -39,7 +47,7 @@ async def test_create_user_success():
     repo = InMemoryUserRepository()
     service = UserService(user_repo=repo)
 
-    request = CreateUserRequest(
+    request = CreateUserCommand(
         username="testuser",
         password="secure_password123",
         email="test@example.com",
@@ -52,7 +60,9 @@ async def test_create_user_success():
 
     assert user.email == "test@example.com"
     assert user.profile.real_name == "김테스트"
-    assert user.password.startswith("$argon2")
+    password = user.password
+    assert password is not None
+    assert password.startswith("$argon2")
 
 
 @pytest.mark.asyncio
@@ -60,7 +70,7 @@ async def test_create_user_duplicate_username():
     repo = InMemoryUserRepository()
     service = UserService(user_repo=repo)
 
-    first_request = CreateUserRequest(
+    first_request = CreateUserCommand(
         username="duplicate_user",
         password="secure_password123",
         email="first@example.com",
@@ -68,7 +78,7 @@ async def test_create_user_duplicate_username():
         real_name="김테스트",
         phone_number="010-1234-5678",
     )
-    second_request = CreateUserRequest(
+    second_request = CreateUserCommand(
         username="duplicate_user",
         password="secure_password123",
         email="second@example.com",
@@ -88,7 +98,7 @@ async def test_create_user_duplicate_email():
     repo = InMemoryUserRepository()
     service = UserService(user_repo=repo)
 
-    first_request = CreateUserRequest(
+    first_request = CreateUserCommand(
         username="firstuser",
         password="secure_password123",
         email="dup@example.com",
@@ -96,7 +106,7 @@ async def test_create_user_duplicate_email():
         real_name="김테스트",
         phone_number="010-1234-5678",
     )
-    second_request = CreateUserRequest(
+    second_request = CreateUserCommand(
         username="seconduser",
         password="secure_password123",
         email="dup@example.com",
@@ -125,7 +135,7 @@ async def test_update_user_success():
     repo = InMemoryUserRepository()
     service = UserService(user_repo=repo)
     created_user = await service.create_user(
-        CreateUserRequest(
+        CreateUserCommand(
             username="testuser",
             password="secure_password123",
             email="test@example.com",
@@ -137,7 +147,11 @@ async def test_update_user_success():
 
     updated_user = await service.update_user(
         created_user.id,
-        UpdateUserRequest(nickname="updated", real_name="김업데이트", phone_number=None),
+        UpdateUserCommand(
+            nickname="updated",
+            real_name="김업데이트",
+            phone_number=None,
+        ),
     )
 
     assert updated_user.profile.nickname == "updated"
@@ -150,7 +164,7 @@ async def test_update_user_duplicate_username():
     repo = InMemoryUserRepository()
     service = UserService(user_repo=repo)
     await service.create_user(
-        CreateUserRequest(
+        CreateUserCommand(
             username="firstuser",
             password="secure_password123",
             email="first@example.com",
@@ -160,7 +174,7 @@ async def test_update_user_duplicate_username():
         )
     )
     second_user = await service.create_user(
-        CreateUserRequest(
+        CreateUserCommand(
             username="seconduser",
             password="secure_password123",
             email="second@example.com",
@@ -171,7 +185,9 @@ async def test_update_user_duplicate_username():
     )
 
     with pytest.raises(UserNameAlreadyExistsException):
-        await service.update_user(second_user.id, UpdateUserRequest(username="firstuser"))
+        await service.update_user(
+            second_user.id, UpdateUserCommand(username="firstuser")
+        )
 
 
 @pytest.mark.asyncio
@@ -179,7 +195,7 @@ async def test_delete_user_soft_delete():
     repo = InMemoryUserRepository()
     service = UserService(user_repo=repo)
     created_user = await service.create_user(
-        CreateUserRequest(
+        CreateUserCommand(
             username="testuser",
             password="secure_password123",
             email="test@example.com",

@@ -20,21 +20,22 @@ class Profile(ValueObject):
     profile_image_id: UUID | None = None
 
     def __composite_values__(self) -> tuple[str, str, str | None, UUID | None]:
-        return self.nickname, self.real_name, self.phone_number, self.profile_image_id
+        return (
+            self.nickname,
+            self.real_name,
+            self.phone_number,
+            self.profile_image_id,
+        )
 
 
 @dataclass
 class User(Entity):
     username: str
-    password: str | None  # Social login might not have a password initially
+    password: str
     email: str
     profile: Profile
     status: UserStatus = UserStatus.ACTIVE
     is_deleted: bool = False
-
-    # OAuth2 support
-    oauth_provider: str | None = None
-    oauth_id: str | None = None
 
     def update_profile(self, new_profile: Profile) -> None:
         self.profile = new_profile
