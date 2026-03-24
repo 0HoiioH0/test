@@ -39,12 +39,11 @@ def _to_payload(organization: Organization) -> OrganizationPayload:
 @inject
 async def create_organization(
     request: CreateOrganizationRequest,
-    current_user: CurrentUser = Depends(require_admin_user),
+    _current_user: CurrentUser = Depends(require_admin_user),
     usecase: OrganizationUseCase = Depends(
         Provide[OrganizationContainer.service]
     ),
 ):
-    del current_user
     organization = await usecase.create_organization(
         CreateOrganizationCommand(**request.model_dump())
     )
@@ -81,12 +80,11 @@ async def get_organization(
 async def update_organization(
     organization_id: UUID,
     request: UpdateOrganizationRequest,
-    current_user: CurrentUser = Depends(require_admin_user),
+    _current_user: CurrentUser = Depends(require_admin_user),
     usecase: OrganizationUseCase = Depends(
         Provide[OrganizationContainer.service]
     ),
 ):
-    del current_user
     organization = await usecase.update_organization(
         organization_id,
         UpdateOrganizationCommand(**request.model_dump(exclude_unset=True)),
@@ -98,11 +96,10 @@ async def update_organization(
 @inject
 async def delete_organization(
     organization_id: UUID,
-    current_user: CurrentUser = Depends(require_admin_user),
+    _current_user: CurrentUser = Depends(require_admin_user),
     usecase: OrganizationUseCase = Depends(
         Provide[OrganizationContainer.service]
     ),
 ):
-    del current_user
     organization = await usecase.delete_organization(organization_id)
     return OrganizationResponse(data=_to_payload(organization))

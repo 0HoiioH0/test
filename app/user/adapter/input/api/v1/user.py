@@ -28,10 +28,9 @@ router = APIRouter(prefix="/users", tags=["users"])
 @inject
 async def create_user(
     request: CreateUserRequest,
-    current_user: CurrentUser = Depends(require_admin_user),
+    _current_user: CurrentUser = Depends(require_admin_user),
     usecase: UserUseCase = Depends(Provide[UserContainer.service]),
 ):
-    del current_user
     user = await usecase.create_user(CreateUserCommand(**request.model_dump()))
     return UserResponse(
         data=UserPayload(
@@ -50,10 +49,9 @@ async def create_user(
 @router.get("", response_model=UserListResponse)
 @inject
 async def list_users(
-    current_user: CurrentUser = Depends(require_authenticated_user),
+    _current_user: CurrentUser = Depends(require_authenticated_user),
     usecase: UserUseCase = Depends(Provide[UserContainer.service]),
 ):
-    del current_user
     users = await usecase.list_users()
     return UserListResponse(
         data=[
@@ -122,10 +120,9 @@ async def update_user(
 @inject
 async def delete_user(
     user_id: UUID,
-    current_user: CurrentUser = Depends(require_admin_user),
+    _current_user: CurrentUser = Depends(require_admin_user),
     usecase: UserUseCase = Depends(Provide[UserContainer.service]),
 ):
-    del current_user
     user = await usecase.delete_user(user_id)
     return UserResponse(
         data=UserPayload(

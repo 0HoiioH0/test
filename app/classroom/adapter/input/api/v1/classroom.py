@@ -22,23 +22,9 @@ from app.classroom.domain.command import (
     CreateClassroomCommand,
     UpdateClassroomCommand,
 )
-from app.classroom.domain.entity import Classroom
 from app.classroom.domain.usecase import ClassroomUseCase
 
 router = APIRouter(prefix="/classrooms", tags=["classrooms"])
-
-
-def _to_payload(classroom: Classroom) -> ClassroomPayload:
-    return ClassroomPayload(
-        id=str(classroom.id),
-        name=classroom.name,
-        professor_ids=[str(user_id) for user_id in classroom.professor_ids],
-        grade=classroom.grade,
-        semester=classroom.semester,
-        section=classroom.section,
-        description=classroom.description,
-        student_ids=[str(user_id) for user_id in classroom.student_ids],
-    )
 
 
 @router.post("", response_model=ClassroomResponse)
@@ -61,7 +47,18 @@ async def create_classroom(
             student_ids=request.student_ids,
         ),
     )
-    return ClassroomResponse(data=_to_payload(classroom))
+    return ClassroomResponse(
+        data=ClassroomPayload(
+            id=str(classroom.id),
+            name=classroom.name,
+            professor_ids=[str(user_id) for user_id in classroom.professor_ids],
+            grade=classroom.grade,
+            semester=classroom.semester,
+            section=classroom.section,
+            description=classroom.description,
+            student_ids=[str(user_id) for user_id in classroom.student_ids],
+        )
+    )
 
 
 @router.get("", response_model=ClassroomListResponse)
@@ -72,7 +69,21 @@ async def list_classrooms(
 ):
     classrooms = await usecase.list_classrooms(current_user=current_user)
     return ClassroomListResponse(
-        data=[_to_payload(classroom) for classroom in classrooms]
+        data=[
+            ClassroomPayload(
+                id=str(classroom.id),
+                name=classroom.name,
+                professor_ids=[
+                    str(user_id) for user_id in classroom.professor_ids
+                ],
+                grade=classroom.grade,
+                semester=classroom.semester,
+                section=classroom.section,
+                description=classroom.description,
+                student_ids=[str(user_id) for user_id in classroom.student_ids],
+            )
+            for classroom in classrooms
+        ]
     )
 
 
@@ -87,7 +98,18 @@ async def get_classroom(
         classroom_id=classroom_id,
         current_user=current_user,
     )
-    return ClassroomResponse(data=_to_payload(classroom))
+    return ClassroomResponse(
+        data=ClassroomPayload(
+            id=str(classroom.id),
+            name=classroom.name,
+            professor_ids=[str(user_id) for user_id in classroom.professor_ids],
+            grade=classroom.grade,
+            semester=classroom.semester,
+            section=classroom.section,
+            description=classroom.description,
+            student_ids=[str(user_id) for user_id in classroom.student_ids],
+        )
+    )
 
 
 @router.patch("/{classroom_id}", response_model=ClassroomResponse)
@@ -105,7 +127,18 @@ async def update_classroom(
             **request.model_dump(exclude_unset=True)
         ),
     )
-    return ClassroomResponse(data=_to_payload(classroom))
+    return ClassroomResponse(
+        data=ClassroomPayload(
+            id=str(classroom.id),
+            name=classroom.name,
+            professor_ids=[str(user_id) for user_id in classroom.professor_ids],
+            grade=classroom.grade,
+            semester=classroom.semester,
+            section=classroom.section,
+            description=classroom.description,
+            student_ids=[str(user_id) for user_id in classroom.student_ids],
+        )
+    )
 
 
 @router.delete("/{classroom_id}", response_model=ClassroomResponse)
@@ -119,4 +152,15 @@ async def delete_classroom(
         classroom_id=classroom_id,
         current_user=current_user,
     )
-    return ClassroomResponse(data=_to_payload(classroom))
+    return ClassroomResponse(
+        data=ClassroomPayload(
+            id=str(classroom.id),
+            name=classroom.name,
+            professor_ids=[str(user_id) for user_id in classroom.professor_ids],
+            grade=classroom.grade,
+            semester=classroom.semester,
+            section=classroom.section,
+            description=classroom.description,
+            student_ids=[str(user_id) for user_id in classroom.student_ids],
+        )
+    )
