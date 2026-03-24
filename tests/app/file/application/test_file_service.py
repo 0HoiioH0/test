@@ -2,9 +2,6 @@ from uuid import UUID
 
 import pytest
 
-from app.file.adapter.output.persistence.repository_adapter import (
-    FileRepositoryAdapter,
-)
 from app.file.application.exception import FileNotFoundException
 from app.file.application.service.file import FileService
 from app.file.domain.command import CreateFileCommand, UpdateFileCommand
@@ -47,7 +44,7 @@ def make_create_command() -> CreateFileCommand:
 @pytest.mark.asyncio
 async def test_create_file_success():
     repo = InMemoryFileRepository()
-    service = FileService(repository=FileRepositoryAdapter(repository=repo))
+    service = FileService(repository=repo)
 
     file = await service.create_file(make_create_command())
 
@@ -58,7 +55,7 @@ async def test_create_file_success():
 @pytest.mark.asyncio
 async def test_get_file_not_found():
     repo = InMemoryFileRepository()
-    service = FileService(repository=FileRepositoryAdapter(repository=repo))
+    service = FileService(repository=repo)
 
     with pytest.raises(FileNotFoundException):
         await service.get_file(UUID("00000000-0000-0000-0000-000000000000"))
@@ -67,7 +64,7 @@ async def test_get_file_not_found():
 @pytest.mark.asyncio
 async def test_update_file_success():
     repo = InMemoryFileRepository()
-    service = FileService(repository=FileRepositoryAdapter(repository=repo))
+    service = FileService(repository=repo)
     created_file = await service.create_file(make_create_command())
 
     updated_file = await service.update_file(
@@ -87,7 +84,7 @@ async def test_update_file_success():
 @pytest.mark.asyncio
 async def test_update_file_omitted_fields_keep_existing_values():
     repo = InMemoryFileRepository()
-    service = FileService(repository=FileRepositoryAdapter(repository=repo))
+    service = FileService(repository=repo)
     created_file = await service.create_file(make_create_command())
 
     updated_file = await service.update_file(
@@ -103,7 +100,7 @@ async def test_update_file_omitted_fields_keep_existing_values():
 @pytest.mark.asyncio
 async def test_delete_file_excludes_from_list():
     repo = InMemoryFileRepository()
-    service = FileService(repository=FileRepositoryAdapter(repository=repo))
+    service = FileService(repository=repo)
     created_file = await service.create_file(make_create_command())
 
     deleted_file = await service.delete_file(created_file.id)

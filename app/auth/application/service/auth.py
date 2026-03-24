@@ -2,9 +2,6 @@ from uuid import UUID, uuid4
 
 from jwt import PyJWTError
 
-from app.auth.adapter.output.persistence.auth_token_repository_adapter import (
-    AuthTokenRepositoryAdapter,
-)
 from app.auth.application.dto import AuthTokensDTO
 from app.auth.application.exception import (
     AuthInvalidCredentialsException,
@@ -15,11 +12,10 @@ from app.auth.domain.command import (
     LogoutCommand,
     RefreshTokenCommand,
 )
+from app.auth.domain.repository.auth_token import AuthTokenRepository
 from app.auth.domain.usecase.auth import AuthUseCase
-from app.user.adapter.output.persistence.repository_adapter import (
-    UserRepositoryAdapter,
-)
 from app.user.domain.entity.user import UserStatus
+from app.user.domain.repository.user import UserRepository
 from core.config import config
 from core.domain.types import TokenType
 from core.helpers.argon2 import Argon2Helper
@@ -30,8 +26,8 @@ class AuthService(AuthUseCase):
     def __init__(
         self,
         *,
-        user_repository: UserRepositoryAdapter,
-        auth_token_repository: AuthTokenRepositoryAdapter,
+        user_repository: UserRepository,
+        auth_token_repository: AuthTokenRepository,
     ):
         self.user_repository = user_repository
         self.auth_token_repository = auth_token_repository

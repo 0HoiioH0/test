@@ -1,8 +1,5 @@
 from uuid import UUID
 
-from app.user.adapter.output.persistence.repository_adapter import (
-    UserRepositoryAdapter,
-)
 from app.user.application.exception import (
     UserEmailAlreadyExistsException,
     UserNameAlreadyExistsException,
@@ -10,13 +7,14 @@ from app.user.application.exception import (
 )
 from app.user.domain.command import CreateUserCommand, UpdateUserCommand
 from app.user.domain.entity.user import Profile, User
+from app.user.domain.repository.user import UserRepository
 from app.user.domain.usecase.user import UserUseCase
 from core.db.transactional import transactional
 from core.helpers.argon2 import Argon2Helper
 
 
 class UserService(UserUseCase):
-    def __init__(self, *, repository: UserRepositoryAdapter):
+    def __init__(self, *, repository: UserRepository):
         self.repository = repository
 
     @transactional

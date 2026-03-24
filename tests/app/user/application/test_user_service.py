@@ -2,9 +2,6 @@ from uuid import UUID
 
 import pytest
 
-from app.user.adapter.output.persistence.repository_adapter import (
-    UserRepositoryAdapter,
-)
 from app.user.application.exception import (
     UserEmailAlreadyExistsException,
     UserNameAlreadyExistsException,
@@ -45,7 +42,7 @@ class InMemoryUserRepository(UserRepository):
 @pytest.mark.asyncio
 async def test_create_user_success():
     repo = InMemoryUserRepository()
-    service = UserService(repository=UserRepositoryAdapter(repository=repo))
+    service = UserService(repository=repo)
 
     request = CreateUserCommand(
         username="testuser",
@@ -68,7 +65,7 @@ async def test_create_user_success():
 @pytest.mark.asyncio
 async def test_create_user_duplicate_username():
     repo = InMemoryUserRepository()
-    service = UserService(repository=UserRepositoryAdapter(repository=repo))
+    service = UserService(repository=repo)
 
     first_request = CreateUserCommand(
         username="duplicate_user",
@@ -96,7 +93,7 @@ async def test_create_user_duplicate_username():
 @pytest.mark.asyncio
 async def test_create_user_duplicate_email():
     repo = InMemoryUserRepository()
-    service = UserService(repository=UserRepositoryAdapter(repository=repo))
+    service = UserService(repository=repo)
 
     first_request = CreateUserCommand(
         username="firstuser",
@@ -124,7 +121,7 @@ async def test_create_user_duplicate_email():
 @pytest.mark.asyncio
 async def test_get_user_not_found():
     repo = InMemoryUserRepository()
-    service = UserService(repository=UserRepositoryAdapter(repository=repo))
+    service = UserService(repository=repo)
 
     with pytest.raises(UserNotFoundException):
         await service.get_user(UUID("00000000-0000-0000-0000-000000000000"))
@@ -133,7 +130,7 @@ async def test_get_user_not_found():
 @pytest.mark.asyncio
 async def test_update_user_success():
     repo = InMemoryUserRepository()
-    service = UserService(repository=UserRepositoryAdapter(repository=repo))
+    service = UserService(repository=repo)
     created_user = await service.create_user(
         CreateUserCommand(
             username="testuser",
@@ -162,7 +159,7 @@ async def test_update_user_success():
 @pytest.mark.asyncio
 async def test_update_user_omitted_optional_field_keeps_existing_value():
     repo = InMemoryUserRepository()
-    service = UserService(repository=UserRepositoryAdapter(repository=repo))
+    service = UserService(repository=repo)
     created_user = await service.create_user(
         CreateUserCommand(
             username="testuser",
@@ -186,7 +183,7 @@ async def test_update_user_omitted_optional_field_keeps_existing_value():
 @pytest.mark.asyncio
 async def test_update_user_duplicate_username():
     repo = InMemoryUserRepository()
-    service = UserService(repository=UserRepositoryAdapter(repository=repo))
+    service = UserService(repository=repo)
     await service.create_user(
         CreateUserCommand(
             username="firstuser",
@@ -217,7 +214,7 @@ async def test_update_user_duplicate_username():
 @pytest.mark.asyncio
 async def test_delete_user_soft_delete():
     repo = InMemoryUserRepository()
-    service = UserService(repository=UserRepositoryAdapter(repository=repo))
+    service = UserService(repository=repo)
     created_user = await service.create_user(
         CreateUserCommand(
             username="testuser",

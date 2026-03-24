@@ -1,17 +1,15 @@
 from uuid import UUID
 
-from app.file.adapter.output.persistence.repository_adapter import (
-    FileRepositoryAdapter,
-)
 from app.file.application.exception import FileNotFoundException
 from app.file.domain.command import CreateFileCommand, UpdateFileCommand
 from app.file.domain.entity.file import File
+from app.file.domain.repository.file import FileRepository
 from app.file.domain.usecase.file import FileUseCase
 from core.db.transactional import transactional
 
 
 class FileService(FileUseCase):
-    def __init__(self, *, repository: FileRepositoryAdapter):
+    def __init__(self, *, repository: FileRepository):
         self.repository = repository
 
     @transactional

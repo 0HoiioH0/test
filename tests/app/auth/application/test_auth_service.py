@@ -2,9 +2,6 @@ from uuid import UUID, uuid4
 
 import pytest
 
-from app.auth.adapter.output.persistence.auth_token_repository_adapter import (
-    AuthTokenRepositoryAdapter,
-)
 from app.auth.application.exception import (
     AuthInvalidCredentialsException,
     AuthInvalidRefreshTokenException,
@@ -16,9 +13,6 @@ from app.auth.domain.command import (
     RefreshTokenCommand,
 )
 from app.auth.domain.repository.auth_token import AuthTokenRepository
-from app.user.adapter.output.persistence.repository_adapter import (
-    UserRepositoryAdapter,
-)
 from app.user.domain.entity.user import Profile, User
 from app.user.domain.repository.user import UserRepository
 from core.domain.types import TokenType
@@ -91,10 +85,8 @@ async def test_login_success_issues_and_stores_tokens():
     user_repository = InMemoryUserRepository([user])
     auth_token_repository = InMemoryAuthTokenRepository()
     service = AuthService(
-        user_repository=UserRepositoryAdapter(repository=user_repository),
-        auth_token_repository=AuthTokenRepositoryAdapter(
-            repository=auth_token_repository
-        ),
+        user_repository=user_repository,
+        auth_token_repository=auth_token_repository,
     )
 
     tokens = await service.login(
@@ -114,12 +106,8 @@ async def test_login_success_issues_and_stores_tokens():
 async def test_login_invalid_password_raises():
     user = make_user()
     service = AuthService(
-        user_repository=UserRepositoryAdapter(
-            repository=InMemoryUserRepository([user])
-        ),
-        auth_token_repository=AuthTokenRepositoryAdapter(
-            repository=InMemoryAuthTokenRepository()
-        ),
+        user_repository=InMemoryUserRepository([user]),
+        auth_token_repository=InMemoryAuthTokenRepository(),
     )
 
     with pytest.raises(AuthInvalidCredentialsException):
@@ -133,12 +121,8 @@ async def test_refresh_rotates_refresh_token():
     user = make_user()
     auth_token_repository = InMemoryAuthTokenRepository()
     service = AuthService(
-        user_repository=UserRepositoryAdapter(
-            repository=InMemoryUserRepository([user])
-        ),
-        auth_token_repository=AuthTokenRepositoryAdapter(
-            repository=auth_token_repository
-        ),
+        user_repository=InMemoryUserRepository([user]),
+        auth_token_repository=auth_token_repository,
     )
 
     first_tokens = await service.login(
@@ -169,12 +153,8 @@ async def test_refresh_rotates_refresh_token():
 @pytest.mark.asyncio
 async def test_refresh_with_unknown_token_raises():
     service = AuthService(
-        user_repository=UserRepositoryAdapter(
-            repository=InMemoryUserRepository()
-        ),
-        auth_token_repository=AuthTokenRepositoryAdapter(
-            repository=InMemoryAuthTokenRepository()
-        ),
+        user_repository=InMemoryUserRepository(),
+        auth_token_repository=InMemoryAuthTokenRepository(),
     )
 
     invalid_refresh = TokenHelper.create_token(
@@ -191,12 +171,8 @@ async def test_refresh_with_unknown_token_raises():
 @pytest.mark.asyncio
 async def test_refresh_without_token_raises():
     service = AuthService(
-        user_repository=UserRepositoryAdapter(
-            repository=InMemoryUserRepository()
-        ),
-        auth_token_repository=AuthTokenRepositoryAdapter(
-            repository=InMemoryAuthTokenRepository()
-        ),
+        user_repository=InMemoryUserRepository(),
+        auth_token_repository=InMemoryAuthTokenRepository(),
     )
 
     with pytest.raises(AuthInvalidRefreshTokenException):
@@ -208,12 +184,8 @@ async def test_logout_deletes_refresh_token():
     user = make_user()
     auth_token_repository = InMemoryAuthTokenRepository()
     service = AuthService(
-        user_repository=UserRepositoryAdapter(
-            repository=InMemoryUserRepository([user])
-        ),
-        auth_token_repository=AuthTokenRepositoryAdapter(
-            repository=auth_token_repository
-        ),
+        user_repository=InMemoryUserRepository([user]),
+        auth_token_repository=auth_token_repository,
     )
 
     tokens = await service.login(
