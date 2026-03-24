@@ -3,9 +3,14 @@ from uuid import UUID, uuid4
 import pytest
 
 from app.organization.application.exception import (
+    OrganizationCodeAlreadyExistsException,
     OrganizationNotFoundException,
 )
 from app.organization.application.service import OrganizationService
+from app.organization.domain.command import (
+    CreateOrganizationCommand,
+    UpdateOrganizationCommand,
+)
 from app.organization.domain.entity import (
     Organization,
     OrganizationAuthProvider,
@@ -54,6 +59,38 @@ def make_organization() -> Organization:
 
 
 @pytest.mark.asyncio
+async def test_create_organization_success():
+    service = OrganizationService(repository=InMemoryOrganizationRepository())
+
+    organization = await service.create_organization(
+        CreateOrganizationCommand(
+            code="univ_hansung",
+            name="한성대학교",
+            auth_provider=OrganizationAuthProvider.HANSUNG_SIS,
+        )
+    )
+
+    assert organization.code == "univ_hansung"
+    assert organization.name == "한성대학교"
+
+
+@pytest.mark.asyncio
+async def test_create_organization_duplicate_code_raises():
+    service = OrganizationService(
+        repository=InMemoryOrganizationRepository([make_organization()])
+    )
+
+    with pytest.raises(OrganizationCodeAlreadyExistsException):
+        await service.create_organization(
+            CreateOrganizationCommand(
+                code="univ_hansung",
+                name="다른 조직",
+                auth_provider=OrganizationAuthProvider.HANSUNG_SIS,
+            )
+        )
+
+
+@pytest.mark.asyncio
 async def test_list_organizations_returns_all_organizations():
     service = OrganizationService(
         repository=InMemoryOrganizationRepository([make_organization()])
@@ -82,3 +119,51 @@ async def test_get_organization_not_found_raises():
 
     with pytest.raises(OrganizationNotFoundException):
         await service.get_organization(uuid4())
+
+
+@pytest.mark.asyncio
+async def test_update_organization_success():
+    service = OrganizationService(
+        repository=InMemoryOrganizationRepository([make_organization()])
+    )
+
+    organization = await service.update_organization(
+        HANSUNG_ID,
+        UpdateOrganizationCommand(name="한성대학교 테스트", is_active=False),
+    )
+
+    assert organization.name == "한성대학교 테스트"
+    assert organization.is_active is False
+
+
+@pytest.mark.asyncio
+async def test_update_organization_duplicate_code_raises():
+    other_organization = Organization(
+        code="univ_other",
+        name="다른대학교",
+        auth_provider=OrganizationAuthProvider.HANSUNG_SIS,
+    )
+    other_organization.id = uuid4()
+    service = OrganizationService(
+        repository=InMemoryOrganizationRepository([
+            make_organization(),
+            other_organization,
+        ])
+    )
+
+    with pytest.raises(OrganizationCodeAlreadyExistsException):
+        await service.update_organization(
+            other_organization.id,
+            UpdateOrganizationCommand(code="univ_hansung"),
+        )
+
+
+@pytest.mark.asyncio
+async def test_delete_organization_sets_inactive():
+    service = OrganizationService(
+        repository=InMemoryOrganizationRepository([make_organization()])
+    )
+
+    organization = await service.delete_organization(HANSUNG_ID)
+
+    assert organization.is_active is False

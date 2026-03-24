@@ -15,3 +15,6 @@ class Organization(Entity):
     name: str
     auth_provider: OrganizationAuthProvider
     is_active: bool = True
+
+    def delete(self) -> None:
+        self.is_active = False

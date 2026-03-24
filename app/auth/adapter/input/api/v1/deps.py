@@ -1,15 +1,16 @@
 from uuid import UUID
 
 import jwt
-from dependency_injector.wiring import Provide, inject
 from fastapi import Cookie, Depends
 
 from app.auth.application.exception import (
     AuthForbiddenException,
     AuthUnauthorizedException,
 )
-from app.auth.container import AuthContainer
 from app.auth.domain.entity import CurrentUser
+from app.user.adapter.output.persistence.sqlalchemy import (
+    UserSQLAlchemyRepository,
+)
 from app.user.domain.entity import UserRole, UserStatus
 from app.user.domain.repository import UserRepository
 from core.config import config
@@ -17,15 +18,12 @@ from core.domain.types import TokenType
 from core.helpers.token import TokenHelper
 
 
-@inject
 async def require_authenticated_user(
     access_token: str | None = Cookie(
         default=None,
         alias=config.ACCESS_TOKEN_COOKIE_NAME,
     ),
-    user_repository: UserRepository = Depends(
-        Provide[AuthContainer.user_repository]
-    ),
+    user_repository: UserRepository = Depends(UserSQLAlchemyRepository),
 ) -> CurrentUser:
     if access_token is None:
         raise AuthUnauthorizedException()
