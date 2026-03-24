@@ -3,10 +3,8 @@ from uuid import UUID
 
 from sqlalchemy import select
 
-from app.organization.domain.entity.organization import Organization
-from app.organization.domain.repository.organization import (
-    OrganizationRepository,
-)
+from app.organization.domain.entity import Organization
+from app.organization.domain.repository import OrganizationRepository
 from core.db.session import session
 from core.db.sqlalchemy.models.organization import organization_table
 

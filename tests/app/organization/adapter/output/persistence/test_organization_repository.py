@@ -1,20 +1,29 @@
 import uuid
+from contextvars import ContextVar
 from uuid import UUID
 
 import pytest
 import pytest_asyncio
 from sqlalchemy import delete
-from sqlalchemy.ext.asyncio import create_async_engine
+from sqlalchemy.ext.asyncio import (
+    AsyncSession,
+    async_scoped_session,
+    async_sessionmaker,
+    create_async_engine,
+)
+from sqlalchemy.pool import NullPool
 
 from app.organization.adapter.output.persistence.sqlalchemy import (
     OrganizationSQLAlchemyRepository,
 )
-from app.organization.domain.entity.organization import (
+from app.organization.adapter.output.persistence.sqlalchemy import (
+    organization as organization_repo,
+)
+from app.organization.domain.entity import (
     Organization,
     OrganizationAuthProvider,
 )
 from core.config import config
-from core.db.session import session, session_context
 from core.db.sqlalchemy import init_orm_mappers
 from core.db.sqlalchemy.models.base import metadata
 from core.db.sqlalchemy.models.organization import organization_table
@@ -27,9 +36,9 @@ except Exception:
 ORGANIZATION_ID = UUID("11111111-1111-1111-1111-111111111111")
 
 
-@pytest_asyncio.fixture(scope="session", autouse=True)
+@pytest_asyncio.fixture(autouse=True)
 async def setup_db():
-    engine = create_async_engine(config.DATABASE_URL)
+    engine = create_async_engine(config.DATABASE_URL, poolclass=NullPool)
     async with engine.begin() as conn:
         await conn.run_sync(metadata.create_all)
     yield
@@ -40,14 +49,29 @@ async def setup_db():
 
 @pytest_asyncio.fixture
 async def db_session():
+    session_context = ContextVar[str]("test_session_context", default="global")
+
+    def get_context() -> str:
+        return session_context.get()
+
+    engine = create_async_engine(config.DATABASE_URL, poolclass=NullPool)
+    factory = async_sessionmaker(
+        bind=engine,
+        class_=AsyncSession,
+        expire_on_commit=False,
+    )
+    scoped_session = async_scoped_session(factory, scopefunc=get_context)
+    organization_repo.session = scoped_session
+
     token = session_context.set(str(uuid.uuid4()))
-    async with session() as s:
+    async with scoped_session() as s:
         await s.execute(delete(organization_table))
         await s.commit()
         yield s
         await s.execute(delete(organization_table))
         await s.commit()
-    await session.remove()
+    await scoped_session.remove()
+    await engine.dispose()
     session_context.reset(token)
 
 

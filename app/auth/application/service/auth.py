@@ -13,14 +13,11 @@ from app.auth.domain.command import (
     LogoutCommand,
     RefreshTokenCommand,
 )
-from app.auth.domain.repository.auth_token import AuthTokenRepository
-from app.auth.domain.repository.identity_verifier import IdentityVerifier
+from app.auth.domain.repository import AuthTokenRepository, IdentityVerifier
 from app.auth.domain.usecase.auth import AuthUseCase
-from app.organization.domain.repository.organization import (
-    OrganizationRepository,
-)
-from app.user.domain.entity.user import Profile, User, UserRole, UserStatus
-from app.user.domain.repository.user import UserRepository
+from app.organization.domain.repository import OrganizationRepository
+from app.user.domain.entity import Profile, User, UserRole, UserStatus
+from app.user.domain.repository import UserRepository
 from core.config import config
 from core.domain.types import TokenType
 from core.helpers.token import TokenHelper

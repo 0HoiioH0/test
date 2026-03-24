@@ -1,6 +1,6 @@
 from abc import abstractmethod
 
-from app.organization.domain.entity.organization import Organization
+from app.organization.domain.entity import Organization
 from core.repository.base import BaseRepository
 
 

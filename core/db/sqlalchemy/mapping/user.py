@@ -1,6 +1,6 @@
 from sqlalchemy.orm import composite
 
-from app.user.domain.entity.user import Profile, User
+from app.user.domain.entity import Profile, User
 from core.db.sqlalchemy.models.user import user_table
 
 from .base import mapper_registry

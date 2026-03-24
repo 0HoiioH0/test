@@ -8,7 +8,7 @@ from sqlalchemy import (
 )
 from sqlalchemy.dialects.postgresql import UUID as PG_UUID
 
-from app.user.domain.entity.user import UserRole, UserStatus
+from app.user.domain.entity import UserRole, UserStatus
 from core.db.sqlalchemy.models.base import BaseTable, metadata
 
 user_table = BaseTable(

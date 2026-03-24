@@ -7,7 +7,7 @@ from app.auth.application.exception import (
     AuthInvalidCredentialsException,
     AuthInvalidRefreshTokenException,
 )
-from app.auth.application.service.auth import AuthService
+from app.auth.application.service import AuthService
 from main import create_app
 
 

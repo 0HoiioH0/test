@@ -7,8 +7,8 @@ from app.user.application.exception import (
     UserAccountAlreadyExistsException,
     UserNotFoundException,
 )
-from app.user.application.service.user import UserService
-from app.user.domain.entity.user import Profile, User, UserRole
+from app.user.application.service import UserService
+from app.user.domain.entity import Profile, User, UserRole
 from main import create_app
 
 ORGANIZATION_ID = UUID("11111111-1111-1111-1111-111111111111")

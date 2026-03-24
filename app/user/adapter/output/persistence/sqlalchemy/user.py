@@ -3,8 +3,8 @@ from uuid import UUID
 
 from sqlalchemy import select
 
-from app.user.domain.entity.user import User
-from app.user.domain.repository.user import UserRepository
+from app.user.domain.entity import User
+from app.user.domain.repository import UserRepository
 from core.db.session import session
 from core.db.sqlalchemy.models.user import user_table
 

@@ -2,7 +2,7 @@ from uuid import UUID
 
 from pydantic import EmailStr, Field, model_validator
 
-from app.user.domain.entity.user import UserRole, UserStatus
+from app.user.domain.entity import UserRole, UserStatus
 from core.common.request.base import BaseRequest
 
 

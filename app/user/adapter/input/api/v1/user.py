@@ -14,7 +14,7 @@ from app.user.adapter.input.api.v1.response import (
 )
 from app.user.container import UserContainer
 from app.user.domain.command import CreateUserCommand, UpdateUserCommand
-from app.user.domain.usecase.user import UserUseCase
+from app.user.domain.usecase import UserUseCase
 
 router = APIRouter(prefix="/users", tags=["users"])
 

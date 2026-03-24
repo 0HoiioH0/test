@@ -1,7 +1,7 @@
 from abc import ABC, abstractmethod
 
-from app.auth.domain.entity.authenticated_identity import AuthenticatedIdentity
-from app.organization.domain.entity.organization import Organization
+from app.auth.domain.entity import AuthenticatedIdentity
+from app.organization.domain.entity import Organization
 
 
 class IdentityVerifier(ABC):

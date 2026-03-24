@@ -1,9 +1,9 @@
 from app.auth.application.exception import (
     AuthIdentityProviderNotConfiguredException,
 )
-from app.auth.domain.entity.authenticated_identity import AuthenticatedIdentity
-from app.auth.domain.repository.identity_verifier import IdentityVerifier
-from app.organization.domain.entity.organization import (
+from app.auth.domain.entity import AuthenticatedIdentity
+from app.auth.domain.repository import IdentityVerifier
+from app.organization.domain.entity import (
     Organization,
     OrganizationAuthProvider,
 )

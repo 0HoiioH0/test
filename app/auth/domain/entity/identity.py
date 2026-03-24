@@ -1,6 +1,6 @@
 from dataclasses import dataclass
 
-from app.user.domain.entity.user import UserRole
+from app.user.domain.entity import UserRole
 
 
 @dataclass

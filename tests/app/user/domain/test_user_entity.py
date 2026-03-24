@@ -1,6 +1,6 @@
 from uuid import uuid4
 
-from app.user.domain.entity.user import Profile, User, UserRole, UserStatus
+from app.user.domain.entity import Profile, User, UserRole, UserStatus
 
 
 def test_user_entity_creation_with_profile():

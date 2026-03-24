@@ -1,7 +1,7 @@
 from sqlalchemy import Boolean, Column, Enum, String
 from sqlalchemy.dialects.postgresql import UUID as PG_UUID
 
-from app.organization.domain.entity.organization import OrganizationAuthProvider
+from app.organization.domain.entity import OrganizationAuthProvider
 from core.db.sqlalchemy.models.base import BaseTable, metadata
 
 organization_table = BaseTable(

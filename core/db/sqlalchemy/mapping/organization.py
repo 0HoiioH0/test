@@ -1,4 +1,4 @@
-from app.organization.domain.entity.organization import Organization
+from app.organization.domain.entity import Organization
 from core.db.sqlalchemy.models.organization import organization_table
 
 from .base import mapper_registry

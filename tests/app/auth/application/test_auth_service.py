@@ -7,24 +7,21 @@ from app.auth.application.exception import (
     AuthInvalidCredentialsException,
     AuthInvalidRefreshTokenException,
 )
-from app.auth.application.service.auth import AuthService
+from app.auth.application.service import AuthService
 from app.auth.domain.command import (
     LoginCommand,
     LogoutCommand,
     RefreshTokenCommand,
 )
-from app.auth.domain.entity.authenticated_identity import AuthenticatedIdentity
-from app.auth.domain.repository.auth_token import AuthTokenRepository
-from app.auth.domain.repository.identity_verifier import IdentityVerifier
-from app.organization.domain.entity.organization import (
+from app.auth.domain.entity import AuthenticatedIdentity
+from app.auth.domain.repository import AuthTokenRepository, IdentityVerifier
+from app.organization.domain.entity import (
     Organization,
     OrganizationAuthProvider,
 )
-from app.organization.domain.repository.organization import (
-    OrganizationRepository,
-)
-from app.user.domain.entity.user import Profile, User, UserRole
-from app.user.domain.repository.user import UserRepository
+from app.organization.domain.repository import OrganizationRepository
+from app.user.domain.entity import Profile, User, UserRole
+from app.user.domain.repository import UserRepository
 from core.domain.types import TokenType
 from core.helpers.token import TokenHelper
 

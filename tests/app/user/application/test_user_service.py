@@ -6,10 +6,10 @@ from app.user.application.exception import (
     UserAccountAlreadyExistsException,
     UserNotFoundException,
 )
-from app.user.application.service.user import UserService
+from app.user.application.service import UserService
 from app.user.domain.command import CreateUserCommand, UpdateUserCommand
-from app.user.domain.entity.user import User, UserRole
-from app.user.domain.repository.user import UserRepository
+from app.user.domain.entity import User, UserRole
+from app.user.domain.repository import UserRepository
 
 ORGANIZATION_ID = UUID("11111111-1111-1111-1111-111111111111")
 

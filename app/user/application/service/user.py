@@ -5,9 +5,9 @@ from app.user.application.exception import (
     UserNotFoundException,
 )
 from app.user.domain.command import CreateUserCommand, UpdateUserCommand
-from app.user.domain.entity.user import Profile, User
-from app.user.domain.repository.user import UserRepository
-from app.user.domain.usecase.user import UserUseCase
+from app.user.domain.entity import Profile, User
+from app.user.domain.repository import UserRepository
+from app.user.domain.usecase import UserUseCase
 from core.db.transactional import transactional
 
 
