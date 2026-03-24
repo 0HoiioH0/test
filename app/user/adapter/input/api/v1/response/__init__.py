@@ -9,9 +9,7 @@ class UserPayload(BaseModel):
     login_id: str
     role: str
     email: str | None = None
-    nickname: str
     name: str
-    phone_number: str | None = None
     status: str
     is_deleted: bool
 

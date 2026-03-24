@@ -1,25 +1,19 @@
 from uuid import uuid4
 
-from app.user.domain.entity import Profile, User, UserRole, UserStatus
+from app.user.domain.entity import User, UserRole, UserStatus
 
 
-def test_user_entity_creation_with_profile():
-    profile = Profile(
-        nickname="tester",
-        name="김테스트",
-        phone_number="010-1234-5678",
-    )
-
+def test_user_entity_creation():
     user = User(
         organization_id=uuid4(),
         login_id="20260001",
         role=UserRole.STUDENT,
         email="test@example.com",
-        profile=profile,
+        name="김테스트",
     )
 
     assert user.login_id == "20260001"
-    assert user.profile.name == "김테스트"
+    assert user.name == "김테스트"
     assert user.status == UserStatus.ACTIVE
 
 
@@ -29,7 +23,7 @@ def test_user_soft_delete():
         login_id="20260002",
         role=UserRole.STUDENT,
         email=None,
-        profile=Profile(nickname="del", name="삭제"),
+        name="삭제",
     )
 
     user.delete()

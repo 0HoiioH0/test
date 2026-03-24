@@ -175,6 +175,7 @@ This file is for coding agents working in `backend/`.
 ## Domain And Service Conventions
 - Domain entities are dataclass-based and should remain framework-light
 - Value objects belong in domain or shared model layers, not routers
+- The current `User` entity is flat and should stay that way: use direct fields such as `organization_id`, `login_id`, `role`, `email`, `name`, `status`, and `is_deleted`; do not reintroduce nested profile-style value objects for user metadata
 - Application services are async and own business logic
 - Apply `@transactional` to write operations that should commit or roll back atomically
 - Keep read operations simple and avoid transactions unless existing patterns require them

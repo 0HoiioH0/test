@@ -163,7 +163,7 @@ async def test_authenticate_returns_professor_identity(monkeypatch):
 
 
 @pytest.mark.asyncio
-async def test_authenticate_falls_back_when_portal_has_no_profile_text(
+async def test_authenticate_falls_back_when_portal_has_no_identity_text(
     monkeypatch,
 ):
     fake_client = FakeAsyncClient(

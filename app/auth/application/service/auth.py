@@ -18,7 +18,7 @@ from app.auth.domain.repository import AuthTokenRepository
 from app.auth.domain.usecase.auth import AuthUseCase
 from app.organization.domain.repository import OrganizationRepository
 from app.organization.domain.service import OrganizationAuthService
-from app.user.domain.entity import Profile, User, UserRole, UserStatus
+from app.user.domain.entity import User, UserRole, UserStatus
 from app.user.domain.repository import UserRepository
 from core.config import config
 from core.domain.types import TokenType
@@ -71,10 +71,7 @@ class AuthService(AuthUseCase):
                 login_id=identity.login_id,
                 role=identity.role,
                 email=identity.email,
-                profile=Profile(
-                    nickname=identity.name,
-                    name=identity.name,
-                ),
+                name=identity.name,
             )
         else:
             if user.is_deleted or user.status == UserStatus.BLOCKED:
@@ -82,12 +79,7 @@ class AuthService(AuthUseCase):
 
             user.role = identity.role
             user.email = identity.email
-            user.profile = Profile(
-                nickname=user.profile.nickname,
-                name=identity.name,
-                phone_number=user.profile.phone_number,
-                profile_image_id=user.profile.profile_image_id,
-            )
+            user.name = identity.name
 
         saved_user = await self.user_repository.save(user)
 

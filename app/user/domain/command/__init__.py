@@ -10,16 +10,12 @@ class CreateUserCommand(BaseModel):
     login_id: str
     role: UserRole
     email: str | None = None
-    nickname: str
     name: str
-    phone_number: str | None = None
 
 
 class UpdateUserCommand(BaseModel):
     login_id: str | None = None
     role: UserRole | None = None
     email: str | None = None
-    nickname: str | None = None
     name: str | None = None
-    phone_number: str | None = None
     status: UserStatus | None = None

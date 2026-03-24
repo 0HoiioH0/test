@@ -5,7 +5,7 @@ from app.user.application.exception import (
     UserNotFoundException,
 )
 from app.user.domain.command import CreateUserCommand, UpdateUserCommand
-from app.user.domain.entity import Profile, User
+from app.user.domain.entity import User
 from app.user.domain.repository import UserRepository
 from app.user.domain.usecase import UserUseCase
 from core.db.transactional import transactional
@@ -24,17 +24,12 @@ class UserService(UserUseCase):
         if existing_user:
             raise UserAccountAlreadyExistsException()
 
-        profile = Profile(
-            nickname=command.nickname,
-            name=command.name,
-            phone_number=command.phone_number,
-        )
         user = User(
             organization_id=command.organization_id,
             login_id=command.login_id,
             role=command.role,
             email=command.email,
-            profile=profile,
+            name=command.name,
         )
 
         return await self.repository.save(user)
@@ -82,24 +77,8 @@ class UserService(UserUseCase):
         if "status" in delivered_fields and command.status is not None:
             user.status = command.status
 
-        nickname = user.profile.nickname
-        if "nickname" in delivered_fields and command.nickname is not None:
-            nickname = command.nickname
-
-        name = user.profile.name
         if "name" in delivered_fields and command.name is not None:
-            name = command.name
-
-        phone_number = user.profile.phone_number
-        if "phone_number" in delivered_fields:
-            phone_number = command.phone_number
-
-        user.profile = Profile(
-            nickname=nickname,
-            name=name,
-            phone_number=phone_number,
-            profile_image_id=user.profile.profile_image_id,
-        )
+            user.name = command.name
 
         return await self.repository.save(user)
 

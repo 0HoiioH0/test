@@ -27,7 +27,7 @@ from app.organization.domain.entity import (
 from app.user.adapter.output.persistence.sqlalchemy import (
     UserSQLAlchemyRepository,
 )
-from app.user.domain.entity import Profile, User, UserRole
+from app.user.domain.entity import User, UserRole
 from core.config import config
 from core.db.sqlalchemy import init_orm_mappers
 from core.db.sqlalchemy.models.base import metadata
@@ -102,7 +102,7 @@ async def test_save_and_get_user(db_session):
         login_id="20260001",
         role=UserRole.STUDENT,
         email="repo@example.com",
-        profile=Profile(nickname="repo_test", name="리포테스트"),
+        name="리포테스트",
     )
     await adapter.save(user)
     await db_session.commit()
@@ -114,4 +114,4 @@ async def test_save_and_get_user(db_session):
 
     assert fetched_user is not None
     assert fetched_user.login_id == "20260001"
-    assert fetched_user.profile.nickname == "repo_test"
+    assert fetched_user.name == "리포테스트"

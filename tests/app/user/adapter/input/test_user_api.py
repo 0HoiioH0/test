@@ -8,7 +8,7 @@ from app.user.application.exception import (
     UserNotFoundException,
 )
 from app.user.application.service import UserService
-from app.user.domain.entity import Profile, User, UserRole
+from app.user.domain.entity import User, UserRole
 from main import create_app
 
 ORGANIZATION_ID = UUID("11111111-1111-1111-1111-111111111111")
@@ -29,11 +29,7 @@ def make_user(
         login_id=login_id,
         role=UserRole.STUDENT,
         email=email,
-        profile=Profile(
-            nickname="tester",
-            name="김테스트",
-            phone_number="010-1234-5678",
-        ),
+        name="김테스트",
     )
 
 
@@ -50,9 +46,7 @@ def test_create_user_returns_serialized_id(client, monkeypatch):
             "login_id": "20260001",
             "role": "student",
             "email": "test@example.com",
-            "nickname": "tester",
             "name": "김테스트",
-            "phone_number": "010-1234-5678",
         },
     )
 
@@ -151,9 +145,7 @@ def test_create_user_duplicate_account_returns_409(client, monkeypatch):
             "login_id": "20260001",
             "role": "student",
             "email": "dup@example.com",
-            "nickname": "tester",
             "name": "김테스트",
-            "phone_number": "010-1234-5678",
         },
     )
 
@@ -170,9 +162,7 @@ def test_create_user_duplicate_account_returns_409(client, monkeypatch):
                 "login_id": "",
                 "role": "student",
                 "email": "user@example.com",
-                "nickname": "tester",
                 "name": "김테스트",
-                "phone_number": "010-1234-5678",
             },
             "login_id",
         ),
@@ -182,9 +172,7 @@ def test_create_user_duplicate_account_returns_409(client, monkeypatch):
                 "login_id": "20260001",
                 "role": "student",
                 "email": "user@example.com",
-                "nickname": "tester",
                 "name": "김테스트",
-                "phone_number": "010-1234-5678",
             },
             "organization_id",
         ),
@@ -194,9 +182,7 @@ def test_create_user_duplicate_account_returns_409(client, monkeypatch):
                 "login_id": "20260001",
                 "role": "unknown",
                 "email": "user@example.com",
-                "nickname": "tester",
                 "name": "김테스트",
-                "phone_number": "010-1234-5678",
             },
             "role",
         ),
@@ -206,9 +192,7 @@ def test_create_user_duplicate_account_returns_409(client, monkeypatch):
                 "login_id": "20260001",
                 "role": "student",
                 "email": "invalid-email",
-                "nickname": "tester",
                 "name": "김테스트",
-                "phone_number": "010-1234-5678",
             },
             "email",
         ),
@@ -218,21 +202,7 @@ def test_create_user_duplicate_account_returns_409(client, monkeypatch):
                 "login_id": "20260001",
                 "role": "student",
                 "email": "user@example.com",
-                "nickname": "t",
-                "name": "김테스트",
-                "phone_number": "010-1234-5678",
-            },
-            "nickname",
-        ),
-        (
-            {
-                "organization_id": str(ORGANIZATION_ID),
-                "login_id": "20260001",
-                "role": "student",
-                "email": "user@example.com",
-                "nickname": "tester",
                 "name": "김",
-                "phone_number": "010-1234-5678",
             },
             "name",
         ),

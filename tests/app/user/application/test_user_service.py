@@ -58,16 +58,14 @@ async def test_create_user_success():
         login_id="20260001",
         role=UserRole.STUDENT,
         email="test@example.com",
-        nickname="tester",
         name="김테스트",
-        phone_number="010-1234-5678",
     )
 
     user = await service.create_user(request)
 
     assert user.organization_id == ORGANIZATION_ID
     assert user.login_id == "20260001"
-    assert user.profile.name == "김테스트"
+    assert user.name == "김테스트"
 
 
 @pytest.mark.asyncio
@@ -80,18 +78,14 @@ async def test_create_user_duplicate_account():
         login_id="20260001",
         role=UserRole.STUDENT,
         email="first@example.com",
-        nickname="tester",
         name="김테스트",
-        phone_number="010-1234-5678",
     )
     second_request = CreateUserCommand(
         organization_id=ORGANIZATION_ID,
         login_id="20260001",
         role=UserRole.PROFESSOR,
         email="second@example.com",
-        nickname="tester2",
         name="김테스트2",
-        phone_number="010-2222-3333",
     )
 
     await service.create_user(first_request)
@@ -119,26 +113,20 @@ async def test_update_user_success():
             login_id="20260001",
             role=UserRole.STUDENT,
             email="test@example.com",
-            nickname="tester",
             name="김테스트",
-            phone_number="010-1234-5678",
         )
     )
 
     updated_user = await service.update_user(
         created_user.id,
         UpdateUserCommand(
-            nickname="updated",
             name="김업데이트",
             role=UserRole.PROFESSOR,
-            phone_number=None,
         ),
     )
 
-    assert updated_user.profile.nickname == "updated"
-    assert updated_user.profile.name == "김업데이트"
+    assert updated_user.name == "김업데이트"
     assert updated_user.role == UserRole.PROFESSOR
-    assert updated_user.profile.phone_number is None
 
 
 @pytest.mark.asyncio
@@ -151,9 +139,7 @@ async def test_update_user_duplicate_login_id():
             login_id="20260001",
             role=UserRole.STUDENT,
             email="first@example.com",
-            nickname="tester",
             name="김테스트",
-            phone_number="010-1234-5678",
         )
     )
     second_user = await service.create_user(
@@ -162,9 +148,7 @@ async def test_update_user_duplicate_login_id():
             login_id="20260002",
             role=UserRole.STUDENT,
             email="second@example.com",
-            nickname="tester2",
             name="김테스트2",
-            phone_number="010-2222-3333",
         )
     )
 
@@ -185,9 +169,7 @@ async def test_delete_user_soft_delete():
             login_id="20260001",
             role=UserRole.STUDENT,
             email="test@example.com",
-            nickname="tester",
             name="김테스트",
-            phone_number="010-1234-5678",
         )
     )
 

@@ -23,15 +23,7 @@ user_table = BaseTable(
     ),
     Column("login_id", String(100), nullable=False),
     Column("email", String(255), nullable=True),
-    Column("nickname", String(100), nullable=False),
     Column("name", String(100), nullable=False),
-    Column("phone_number", String(20), nullable=True),
-    Column(
-        "profile_image_id",
-        PG_UUID(as_uuid=True),
-        ForeignKey("t_file.id", ondelete="SET NULL"),
-        nullable=True,
-    ),
     Column("role", Enum(UserRole), nullable=False),
     Column(
         "status", Enum(UserStatus), nullable=False, default=UserStatus.ACTIVE

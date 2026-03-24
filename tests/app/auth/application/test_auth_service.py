@@ -22,7 +22,7 @@ from app.organization.domain.entity import (
 )
 from app.organization.domain.repository import OrganizationRepository
 from app.organization.domain.service import OrganizationAuthService
-from app.user.domain.entity import Profile, User, UserRole
+from app.user.domain.entity import User, UserRole
 from app.user.domain.repository import UserRepository
 from core.domain.types import TokenType
 from core.helpers.token import TokenHelper
@@ -152,7 +152,7 @@ def make_user(login_id: str = "20260001") -> User:
         login_id=login_id,
         role=UserRole.STUDENT,
         email="student@example.com",
-        profile=Profile(nickname="tester", name="김테스트"),
+        name="김테스트",
     )
 
 

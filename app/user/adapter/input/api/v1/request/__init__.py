@@ -11,20 +11,16 @@ class CreateUserRequest(BaseRequest):
     login_id: str = Field(..., min_length=1, max_length=100)
     role: UserRole = Field(...)
     email: EmailStr | None = Field(None)
-    nickname: str = Field(..., min_length=2, max_length=100)
     name: str = Field(..., min_length=2, max_length=100)
-    phone_number: str | None = Field(None, pattern=r"^\d{2,3}-\d{3,4}-\d{4}$")
 
 
 class UpdateUserRequest(BaseRequest):
-    null_fields = {"phone_number", "email"}
+    null_fields = {"email"}
 
     login_id: str | None = Field(None, min_length=1, max_length=100)
     role: UserRole | None = Field(None)
     email: EmailStr | None = Field(None)
-    nickname: str | None = Field(None, min_length=2, max_length=100)
     name: str | None = Field(None, min_length=2, max_length=100)
-    phone_number: str | None = Field(None, pattern=r"^\d{2,3}-\d{3,4}-\d{4}$")
     status: UserStatus | None = Field(None)
 
     @model_validator(mode="after")
