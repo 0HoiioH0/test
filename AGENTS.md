@@ -7,6 +7,7 @@ This file is for coding agents working in `backend/`.
 - Main entrypoint is `main.py`; `create_app()` builds the app and `app` is the ASGI export
 - Main code lives in `app/` and `core/`; tests live in `tests/`; migrations live in `alembic/`
 - Built-in modules include `user`, `auth`, and `file`; treat them as default boilerplate modules, not throwaway samples
+- The project is intended to be reused as a starter template, so prefer generic naming and reusable defaults over product-specific wording
 
 ## Source Of Truth
 - Read `pyproject.toml` for Python, Ruff, and pytest settings
@@ -56,6 +57,7 @@ This file is for coding agents working in `backend/`.
   - Start services: `docker compose up -d`
   - Check health: `docker compose ps`
   - Stop and remove volumes: `docker compose down -v`
+  - Container names are `fastapi-hexagonal-boilerplate-postgres` and `fastapi-hexagonal-boilerplate-valkey`
   - PostgreSQL is exposed on `127.0.0.1:55432`
   - Valkey is exposed on `127.0.0.1:6379`
 - Before DB-backed test runs, apply migrations with the test env vars set:
