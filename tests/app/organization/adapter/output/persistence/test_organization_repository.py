@@ -92,3 +92,50 @@ async def test_save_and_get_organization(db_session):
 
     assert fetched_organization is not None
     assert fetched_organization.name == "한성대학교"
+
+
+@pytest.mark.asyncio
+async def test_get_by_id_returns_organization(db_session):
+    adapter = OrganizationSQLAlchemyRepository()
+    organization = Organization(
+        code="univ_hansung",
+        name="한성대학교",
+        auth_provider=OrganizationAuthProvider.HANSUNG_SIS,
+    )
+    organization.id = ORGANIZATION_ID
+
+    await adapter.save(organization)
+    await db_session.commit()
+
+    fetched_organization = await adapter.get_by_id(ORGANIZATION_ID)
+
+    assert fetched_organization is not None
+    assert fetched_organization.id == ORGANIZATION_ID
+
+
+@pytest.mark.asyncio
+async def test_list_returns_organizations_sorted_by_name(db_session):
+    adapter = OrganizationSQLAlchemyRepository()
+    zeta = Organization(
+        code="univ_zeta",
+        name="제타대학교",
+        auth_provider=OrganizationAuthProvider.HANSUNG_SIS,
+    )
+    zeta.id = UUID("22222222-2222-2222-2222-222222222222")
+    alpha = Organization(
+        code="univ_alpha",
+        name="알파대학교",
+        auth_provider=OrganizationAuthProvider.HANSUNG_SIS,
+    )
+    alpha.id = UUID("33333333-3333-3333-3333-333333333333")
+
+    await adapter.save(zeta)
+    await adapter.save(alpha)
+    await db_session.commit()
+
+    organizations = await adapter.list()
+
+    assert [organization.name for organization in organizations] == [
+        "알파대학교",
+        "제타대학교",
+    ]
