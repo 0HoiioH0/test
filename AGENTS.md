@@ -156,6 +156,7 @@ This file is for coding agents working in `backend/`.
 - Keep path params strongly typed, for example `user_id: UUID`
 - In typical CRUD flows, convert `Request -> Command` in the router and pass commands to the service
 - In typical CRUD flows, build response payloads directly in the router when mapping is simple and local
+- Do not add simple router helper functions like `_to_payload`, `_build_auth_response`, or similar wrappers when inline mapping is short and local
 - Prefer one single-item response envelope plus one list response envelope per resource over per-method wrappers
 - Avoid classes like `CreateUserResponse` or `DeleteUserResponse` unless the response shapes actually differ
 - Return typed wrapper DTOs instead of loose response dicts when wrappers already exist
@@ -191,6 +192,8 @@ This file is for coding agents working in `backend/`.
 - Compose authorization at the API adapter boundary before calling services/use cases
 - When actor context is needed, pass `CurrentUser` from the router into the use case via `Depends(get_current_user)`; do not re-decode tokens or repeat role checks in routers
 - If a rule depends on both actor and target resource, enforce it in the application service after loading the resource, not in the router
+- If the user intentionally changes an API contract, keep the implementation aligned with that contract and update tests instead of restoring older behavior
+- Auth routes may intentionally `return None` when cookies are the meaningful output; do not restore response bodies unless explicitly requested
 - Do not make application services depend on adapter wrapper classes; depend on domain repository ports directly
 - Add `result.py` only if multiple adapters share the same read model or the service should stop returning entities
 
@@ -238,3 +241,12 @@ This file is for coding agents working in `backend/`.
 - Do not broaden scope with unrelated cleanup unless requested
 - If you touch a file, keep imports Ruff-compliant and formatting clean
 - If you add commands or workflows, make sure they work with `uv`
+
+## User-Specific Working Rules
+- Treat ManyFast as the product source of truth when implementing product behavior; re-read it before building domain features that depend on requirements or user flows
+- Use Context7 when the user explicitly requests library/documentation-backed implementation guidance
+- Keep input adapters thin: dependency wiring, request validation/translation, and direct response mapping only
+- Do not put business or resource-specific rules in `adapter/input`; keep them in use cases and application services
+- Avoid reintroducing patterns the user intentionally removed, even if older tests expected them; update tests to match the intended behavior
+- Prefer direct inline response mapping in routers over tiny helper wrappers when the mapping is short and local
+- Follow the established workflow rule: when a task is complete, create a Conventional Commit and push when appropriate for the branch workflow
