@@ -2,11 +2,11 @@ from abc import ABC, abstractmethod
 from uuid import UUID
 
 from app.auth.domain.entity import CurrentUser
-from app.classroom_material.application.dto import ClassroomMaterialResult
 from app.classroom_material.domain.command import (
     CreateClassroomMaterialCommand,
     UpdateClassroomMaterialCommand,
 )
+from app.classroom_material.domain.entity import ClassroomMaterialDetail
 from app.file.domain.service import FileUploadData
 
 
@@ -19,7 +19,7 @@ class ClassroomMaterialUseCase(ABC):
         current_user: CurrentUser,
         command: CreateClassroomMaterialCommand,
         file_upload: FileUploadData,
-    ) -> ClassroomMaterialResult:
+    ) -> ClassroomMaterialDetail:
         """Create classroom material."""
 
     @abstractmethod
@@ -28,7 +28,7 @@ class ClassroomMaterialUseCase(ABC):
         *,
         classroom_id: UUID,
         current_user: CurrentUser,
-    ) -> list[ClassroomMaterialResult]:
+    ) -> list[ClassroomMaterialDetail]:
         """List classroom materials."""
 
     @abstractmethod
@@ -38,7 +38,7 @@ class ClassroomMaterialUseCase(ABC):
         classroom_id: UUID,
         material_id: UUID,
         current_user: CurrentUser,
-    ) -> ClassroomMaterialResult:
+    ) -> ClassroomMaterialDetail:
         """Get classroom material."""
 
     @abstractmethod
@@ -50,7 +50,7 @@ class ClassroomMaterialUseCase(ABC):
         current_user: CurrentUser,
         command: UpdateClassroomMaterialCommand,
         file_upload: FileUploadData | None = None,
-    ) -> ClassroomMaterialResult:
+    ) -> ClassroomMaterialDetail:
         """Update classroom material."""
 
     @abstractmethod
@@ -60,5 +60,5 @@ class ClassroomMaterialUseCase(ABC):
         classroom_id: UUID,
         material_id: UUID,
         current_user: CurrentUser,
-    ) -> ClassroomMaterialResult:
+    ) -> ClassroomMaterialDetail:
         """Delete classroom material."""

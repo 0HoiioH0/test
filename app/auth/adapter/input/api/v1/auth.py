@@ -2,20 +2,20 @@ from dependency_injector.wiring import Provide, inject
 from fastapi import APIRouter, Cookie, Depends, Response
 
 from app.auth.adapter.input.api.v1.request import LoginRequest
-from app.auth.application.dto import AuthTokensDTO
 from app.auth.container import AuthContainer
 from app.auth.domain.command import (
     LoginCommand,
     LogoutCommand,
     RefreshTokenCommand,
 )
+from app.auth.domain.entity import AuthTokens
 from app.auth.domain.usecase.auth import AuthUseCase
 from core.config import config
 
 router = APIRouter(prefix="/auth", tags=["auth"])
 
 
-def _set_auth_cookies(response: Response, tokens: AuthTokensDTO) -> None:
+def _set_auth_cookies(response: Response, tokens: AuthTokens) -> None:
     response.set_cookie(
         key=config.ACCESS_TOKEN_COOKIE_NAME,
         value=tokens.access_token,

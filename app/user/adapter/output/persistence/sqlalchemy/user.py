@@ -36,6 +36,17 @@ class UserSQLAlchemyRepository(UserRepository):
         result = await session.execute(query)
         return result.scalars().all()
 
+    async def list_by_organization(
+        self,
+        organization_id: UUID,
+    ) -> Sequence[User]:
+        query = select(User).where(
+            user_table.c.organization_id == organization_id,
+            user_table.c.is_deleted.is_(False),
+        )
+        result = await session.execute(query)
+        return result.scalars().all()
+
     async def save(self, entity: User) -> User:
         session.add(entity)
         return entity

@@ -2,7 +2,6 @@ from uuid import UUID, uuid4
 
 from jwt import PyJWTError
 
-from app.auth.application.dto import AuthTokensDTO
 from app.auth.application.exception import (
     AuthIdentityProviderNotConfiguredException,
     AuthIdentityProviderUnavailableException,
@@ -14,6 +13,7 @@ from app.auth.domain.command import (
     LogoutCommand,
     RefreshTokenCommand,
 )
+from app.auth.domain.entity import AuthTokens
 from app.auth.domain.repository import AuthTokenRepository
 from app.auth.domain.usecase.auth import AuthUseCase
 from app.organization.domain.repository import OrganizationRepository
@@ -41,7 +41,7 @@ class AuthService(AuthUseCase):
         self.organization_auth_service = organization_auth_service
 
     @transactional
-    async def login(self, command: LoginCommand) -> AuthTokensDTO:
+    async def login(self, command: LoginCommand) -> AuthTokens:
         organization = await self.organization_repository.get_by_code(
             command.organization_code
         )
@@ -92,7 +92,7 @@ class AuthService(AuthUseCase):
             role=saved_user.role,
         )
 
-    async def refresh(self, command: RefreshTokenCommand) -> AuthTokensDTO:
+    async def refresh(self, command: RefreshTokenCommand) -> AuthTokens:
         if command.refresh_token is None:
             raise AuthInvalidRefreshTokenException()
 
@@ -145,7 +145,7 @@ class AuthService(AuthUseCase):
         organization_id: UUID,
         organization_code: str,
         role: UserRole,
-    ) -> AuthTokensDTO:
+    ) -> AuthTokens:
         access_token = TokenHelper.create_token(
             payload={"sub": str(user_id)},
             token_type=TokenType.ACCESS,
@@ -161,7 +161,7 @@ class AuthService(AuthUseCase):
             refresh_token=refresh_token,
             expires_in=config.REFRESH_TOKEN_EXPIRE_MINUTES * 60,
         )
-        return AuthTokensDTO(
+        return AuthTokens(
             user_id=str(user_id),
             organization_id=str(organization_id),
             organization_code=organization_code,

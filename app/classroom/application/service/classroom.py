@@ -319,12 +319,8 @@ class ClassroomService(ClassroomUseCase):
         self,
         organization_id: UUID,
     ) -> dict[UUID, User]:
-        users = await self.user_repository.list()
-        return {
-            user.id: user
-            for user in users
-            if user.organization_id == organization_id and not user.is_deleted
-        }
+        users = await self.user_repository.list_by_organization(organization_id)
+        return {user.id: user for user in users if not user.is_deleted}
 
     @staticmethod
     def _validate_professors(

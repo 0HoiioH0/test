@@ -3,7 +3,6 @@ from uuid import UUID
 from app.auth.application.exception import AuthForbiddenException
 from app.auth.domain.entity import CurrentUser
 from app.classroom.domain.usecase import ClassroomUseCase
-from app.classroom_material.application.dto import ClassroomMaterialResult
 from app.classroom_material.application.exception import (
     ClassroomMaterialNotFoundException,
 )
@@ -11,7 +10,10 @@ from app.classroom_material.domain.command import (
     CreateClassroomMaterialCommand,
     UpdateClassroomMaterialCommand,
 )
-from app.classroom_material.domain.entity import ClassroomMaterial
+from app.classroom_material.domain.entity import (
+    ClassroomMaterial,
+    ClassroomMaterialDetail,
+)
 from app.classroom_material.domain.repository import ClassroomMaterialRepository
 from app.classroom_material.domain.usecase import ClassroomMaterialUseCase
 from app.file.domain.entity.file import FileStatus
@@ -41,7 +43,7 @@ class ClassroomMaterialService(ClassroomMaterialUseCase):
         current_user: CurrentUser,
         command: CreateClassroomMaterialCommand,
         file_upload: FileUploadData,
-    ) -> ClassroomMaterialResult:
+    ) -> ClassroomMaterialDetail:
         classroom = await self.classroom_usecase.get_manageable_classroom(
             classroom_id=classroom_id,
             current_user=current_user,
@@ -60,7 +62,7 @@ class ClassroomMaterialService(ClassroomMaterialUseCase):
             uploaded_by=current_user.id,
         )
         saved_material = await self.repository.save(material)
-        return ClassroomMaterialResult(
+        return ClassroomMaterialDetail(
             material=saved_material, file=uploaded_file
         )
 
@@ -69,7 +71,7 @@ class ClassroomMaterialService(ClassroomMaterialUseCase):
         *,
         classroom_id: UUID,
         current_user: CurrentUser,
-    ) -> list[ClassroomMaterialResult]:
+    ) -> list[ClassroomMaterialDetail]:
         classroom = await self.classroom_usecase.get_classroom(
             classroom_id=classroom_id,
             current_user=current_user,
@@ -84,7 +86,7 @@ class ClassroomMaterialService(ClassroomMaterialUseCase):
         classroom_id: UUID,
         material_id: UUID,
         current_user: CurrentUser,
-    ) -> ClassroomMaterialResult:
+    ) -> ClassroomMaterialDetail:
         classroom = await self.classroom_usecase.get_classroom(
             classroom_id=classroom_id,
             current_user=current_user,
@@ -104,7 +106,7 @@ class ClassroomMaterialService(ClassroomMaterialUseCase):
         current_user: CurrentUser,
         command: UpdateClassroomMaterialCommand,
         file_upload: FileUploadData | None = None,
-    ) -> ClassroomMaterialResult:
+    ) -> ClassroomMaterialDetail:
         classroom = await self.classroom_usecase.get_manageable_classroom(
             classroom_id=classroom_id,
             current_user=current_user,
@@ -131,7 +133,7 @@ class ClassroomMaterialService(ClassroomMaterialUseCase):
             material.file_id = replacement_file.id
             saved_material = await self.repository.save(material)
             await self.file_usecase.delete_file(old_file_id)
-            return ClassroomMaterialResult(
+            return ClassroomMaterialDetail(
                 material=saved_material,
                 file=replacement_file,
             )
@@ -146,7 +148,7 @@ class ClassroomMaterialService(ClassroomMaterialUseCase):
         classroom_id: UUID,
         material_id: UUID,
         current_user: CurrentUser,
-    ) -> ClassroomMaterialResult:
+    ) -> ClassroomMaterialDetail:
         classroom = await self.classroom_usecase.get_manageable_classroom(
             classroom_id=classroom_id,
             current_user=current_user,
@@ -163,9 +165,9 @@ class ClassroomMaterialService(ClassroomMaterialUseCase):
     async def _to_result(
         self,
         material: ClassroomMaterial,
-    ) -> ClassroomMaterialResult:
+    ) -> ClassroomMaterialDetail:
         file = await self.file_usecase.get_file(material.file_id)
-        return ClassroomMaterialResult(material=material, file=file)
+        return ClassroomMaterialDetail(material=material, file=file)
 
     async def _get_material(self, material_id: UUID) -> ClassroomMaterial:
         material = await self.repository.get_by_id(material_id)

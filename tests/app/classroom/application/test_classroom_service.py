@@ -97,6 +97,16 @@ class InMemoryUserRepository(UserRepository):
     async def list(self) -> list[User]:
         return list(self.users.values())
 
+    async def list_by_organization(
+        self,
+        organization_id: UUID,
+    ) -> Sequence[User]:
+        return [
+            user
+            for user in self.users.values()
+            if user.organization_id == organization_id
+        ]
+
     async def get_by_organization_and_login_id(
         self,
         organization_id: UUID,

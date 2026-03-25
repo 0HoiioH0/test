@@ -1,4 +1,4 @@
-<!-- Context: project-intelligence/technical | Priority: critical | Version: 1.2 | Updated: 2026-03-25 -->
+<!-- Context: project-intelligence/technical | Priority: critical | Version: 1.3 | Updated: 2026-03-25 -->
 
 # Technical Domain
 
@@ -112,6 +112,9 @@ class UserService(UserUseCase):
 - CI는 GitHub Actions에서 lint 후 test 순서로 실행된다.
 - 테스트 전 Alembic migration과 앱 bootstrap smoke test를 수행한다.
 - API 테스트는 `TestClient(create_app())`와 monkeypatch 패턴을 자주 사용한다.
+- Alembic 실행 시 `-x env=local|dev|test|prod`로 환경을 명시할 수 있다.
+- DB migration 전에는 `current -> upgrade --sql -> -x dry-run upgrade -> 실제 upgrade` 순서를 항상 따른다.
+- 스키마 변경 시에는 `alembic revision --autogenerate`를 우선 사용하고 migration 파일 수동 수정은 최소화한다.
 
 ## 📂 Codebase References
 - `pyproject.toml` - Python, Ruff, Pytest, 주요 의존성 정의
@@ -125,6 +128,9 @@ class UserService(UserUseCase):
 - `core/fastapi/dependencies/permission.py` - 인증/권한 구조
 - `core/helpers/token.py` - JWT 발급/검증
 - `core/db/session.py` - async SQLAlchemy session 구성
+- `alembic/env.py` - env 기반 Alembic 실행과 dry-run 지원
+- `alembic/versions/a2d651fa6123_add_classroom_domain.py` - classroom 테이블 생성 migration
+- `alembic/versions/daf876d85767_add_classroom_materials.py` - classroom material 테이블 생성 migration
 
 ## Related Files
 - `business-domain.md` - 비즈니스 배경과 문제 정의

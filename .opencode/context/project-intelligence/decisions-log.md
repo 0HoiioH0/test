@@ -1,4 +1,4 @@
-<!-- Context: project-intelligence/decisions | Priority: high | Version: 1.1 | Updated: 2026-03-25 -->
+<!-- Context: project-intelligence/decisions | Priority: high | Version: 1.2 | Updated: 2026-03-25 -->
 
 # Decisions Log
 
@@ -72,10 +72,26 @@
 
 **Trade-off**: 비슷해 보이는 로직이 각 도메인에 나뉠 수 있다. 대신 규칙의 소유권이 분명해진다.
 
+## Decision: 마이그레이션은 env 명시 + preview/dry-run 후 실제 적용한다
+**Date**: 2026-03-25
+**Status**: Decided
+
+**Context**: dev DB에서 `t_classroom` 누락으로 `/api/classrooms`가 500을 반환했고, 원인은 코드가 아니라 로컬 스키마가 head보다 뒤처진 상태였다.
+
+**Decision**: Alembic 실행은 `-x env=...`로 환경을 명시하고, 실제 적용 전 `current -> upgrade --sql -> -x dry-run upgrade -> 실제 upgrade` 순서를 지킨다. 스키마 변경 시에는 autogenerate를 우선 사용한다.
+
+**Rationale**:
+- 잘못된 DB 대상에 migration을 적용하는 실수를 줄인다.
+- SQL preview와 online rollback 검증으로 운영 리스크를 낮춘다.
+- classroom/classroom_material 같은 누락 스키마 문제를 절차적으로 예방할 수 있다.
+
+**Trade-off**: migration 절차가 길어지고 즉시 적용보다 시간이 더 든다. 대신 스키마 드리프트와 환경 혼선을 크게 줄인다.
+
 ## Current Watch Items
 - AI 심층 평가 엔진이 추가될 때도 현재 도메인 경계를 유지할 수 있는지 검토 필요
 - 한성대 연동 외 다른 학교 시스템 확장 시 인증 추상화 수준 재검토 필요
 - 시험/리포트 도메인 추가 시 유스케이스 수 증가에 따른 탐색성 유지 필요
+- migration 생성 시 autogenerate 결과를 어디까지 수동 보정할지 기준을 더 명확히 정리할 필요가 있음
 
 ## 📂 Codebase References
 - `main.py` - 앱 조립과 현재 아키텍처 진입점
@@ -87,6 +103,8 @@
 - `app/auth/application/service/auth.py` - 학교 연동 로그인과 refresh token 관리
 - `app/organization/adapter/output/integration/hansung.py` - 외부 학교 시스템 연동 근거
 - `core/fastapi/dependencies/permission.py` - 공통 인증/인가 인프라와 도메인 규칙의 경계
+- `alembic/env.py` - env 선택과 dry-run migration 결정 반영 지점
+- `alembic/versions/` - autogenerate 우선으로 관리되는 migration 이력
 
 ## Related Files
 - `technical-domain.md` - 현재 구현 패턴과 보안/테스트 규칙

@@ -7,16 +7,17 @@ from app.auth.application.exception import (
     AuthUnauthorizedException,
 )
 from app.auth.domain.entity import CurrentUser
-from app.user.adapter.output.persistence.sqlalchemy import (
-    UserSQLAlchemyRepository,
-)
 from app.user.domain.entity import UserRole, UserStatus
 from app.user.domain.repository import UserRepository
 
 
+def get_user_repository(request: Request) -> UserRepository:
+    return request.app.container.user.repository()
+
+
 async def get_current_user(
     request: Request,
-    user_repository: UserRepository = Depends(UserSQLAlchemyRepository),
+    user_repository: UserRepository = Depends(get_user_repository),
 ) -> CurrentUser:
     user_id = getattr(request.user, "id", None)
     if user_id is None:
