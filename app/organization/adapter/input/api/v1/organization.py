@@ -17,21 +17,10 @@ from app.organization.domain.command import (
     CreateOrganizationCommand,
     UpdateOrganizationCommand,
 )
-from app.organization.domain.entity import Organization
 from app.organization.domain.usecase import OrganizationUseCase
 from core.fastapi.dependencies import IsAdmin, PermissionDependency
 
 router = APIRouter(prefix="/organizations", tags=["organizations"])
-
-
-def _to_payload(organization: Organization) -> OrganizationPayload:
-    return OrganizationPayload(
-        id=str(organization.id),
-        code=organization.code,
-        name=organization.name,
-        auth_provider=organization.auth_provider.value,
-        is_active=organization.is_active,
-    )
 
 
 @router.post(
@@ -49,7 +38,15 @@ async def create_organization(
     organization = await usecase.create_organization(
         CreateOrganizationCommand(**request.model_dump())
     )
-    return OrganizationResponse(data=_to_payload(organization))
+    return OrganizationResponse(
+        data=OrganizationPayload(
+            id=str(organization.id),
+            code=organization.code,
+            name=organization.name,
+            auth_provider=organization.auth_provider.value,
+            is_active=organization.is_active,
+        )
+    )
 
 
 @router.get("", response_model=OrganizationListResponse)
@@ -61,7 +58,16 @@ async def list_organizations(
 ):
     organizations = await usecase.list_organizations()
     return OrganizationListResponse(
-        data=[_to_payload(organization) for organization in organizations]
+        data=[
+            OrganizationPayload(
+                id=str(organization.id),
+                code=organization.code,
+                name=organization.name,
+                auth_provider=organization.auth_provider.value,
+                is_active=organization.is_active,
+            )
+            for organization in organizations
+        ]
     )
 
 
@@ -74,7 +80,15 @@ async def get_organization(
     ),
 ):
     organization = await usecase.get_organization(organization_id)
-    return OrganizationResponse(data=_to_payload(organization))
+    return OrganizationResponse(
+        data=OrganizationPayload(
+            id=str(organization.id),
+            code=organization.code,
+            name=organization.name,
+            auth_provider=organization.auth_provider.value,
+            is_active=organization.is_active,
+        )
+    )
 
 
 @router.patch(
@@ -94,7 +108,15 @@ async def update_organization(
         organization_id,
         UpdateOrganizationCommand(**request.model_dump(exclude_unset=True)),
     )
-    return OrganizationResponse(data=_to_payload(organization))
+    return OrganizationResponse(
+        data=OrganizationPayload(
+            id=str(organization.id),
+            code=organization.code,
+            name=organization.name,
+            auth_provider=organization.auth_provider.value,
+            is_active=organization.is_active,
+        )
+    )
 
 
 @router.delete(
@@ -110,4 +132,12 @@ async def delete_organization(
     ),
 ):
     organization = await usecase.delete_organization(organization_id)
-    return OrganizationResponse(data=_to_payload(organization))
+    return OrganizationResponse(
+        data=OrganizationPayload(
+            id=str(organization.id),
+            code=organization.code,
+            name=organization.name,
+            auth_provider=organization.auth_provider.value,
+            is_active=organization.is_active,
+        )
+    )

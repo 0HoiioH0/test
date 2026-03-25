@@ -14,22 +14,9 @@ from app.file.adapter.input.api.v1.response import (
 )
 from app.file.container import FileContainer
 from app.file.domain.command import CreateFileCommand, UpdateFileCommand
-from app.file.domain.entity.file import File
 from app.file.domain.usecase.file import FileUseCase
 
 router = APIRouter(prefix="/files", tags=["files"])
-
-
-def _to_payload(file: File) -> FilePayload:
-    return FilePayload(
-        id=str(file.id),
-        file_name=file.file_name,
-        file_path=file.file_path,
-        file_extension=file.file_extension,
-        file_size=file.file_size,
-        mime_type=file.mime_type,
-        status=file.status,
-    )
 
 
 @router.post("", response_model=FileResponse)
@@ -39,7 +26,17 @@ async def create_file(
     usecase: FileUseCase = Depends(Provide[FileContainer.service]),
 ):
     file = await usecase.create_file(CreateFileCommand(**request.model_dump()))
-    return FileResponse(data=_to_payload(file))
+    return FileResponse(
+        data=FilePayload(
+            id=str(file.id),
+            file_name=file.file_name,
+            file_path=file.file_path,
+            file_extension=file.file_extension,
+            file_size=file.file_size,
+            mime_type=file.mime_type,
+            status=file.status,
+        )
+    )
 
 
 @router.get("", response_model=FileListResponse)
@@ -48,7 +45,20 @@ async def list_files(
     usecase: FileUseCase = Depends(Provide[FileContainer.service]),
 ):
     files = await usecase.list_files()
-    return FileListResponse(data=[_to_payload(file) for file in files])
+    return FileListResponse(
+        data=[
+            FilePayload(
+                id=str(file.id),
+                file_name=file.file_name,
+                file_path=file.file_path,
+                file_extension=file.file_extension,
+                file_size=file.file_size,
+                mime_type=file.mime_type,
+                status=file.status,
+            )
+            for file in files
+        ]
+    )
 
 
 @router.get("/{file_id}", response_model=FileResponse)
@@ -58,7 +68,17 @@ async def get_file(
     usecase: FileUseCase = Depends(Provide[FileContainer.service]),
 ):
     file = await usecase.get_file(file_id)
-    return FileResponse(data=_to_payload(file))
+    return FileResponse(
+        data=FilePayload(
+            id=str(file.id),
+            file_name=file.file_name,
+            file_path=file.file_path,
+            file_extension=file.file_extension,
+            file_size=file.file_size,
+            mime_type=file.mime_type,
+            status=file.status,
+        )
+    )
 
 
 @router.patch("/{file_id}", response_model=FileResponse)
@@ -72,7 +92,17 @@ async def update_file(
         file_id,
         UpdateFileCommand(**request.model_dump(exclude_unset=True)),
     )
-    return FileResponse(data=_to_payload(file))
+    return FileResponse(
+        data=FilePayload(
+            id=str(file.id),
+            file_name=file.file_name,
+            file_path=file.file_path,
+            file_extension=file.file_extension,
+            file_size=file.file_size,
+            mime_type=file.mime_type,
+            status=file.status,
+        )
+    )
 
 
 @router.delete("/{file_id}", response_model=FileResponse)
@@ -82,4 +112,14 @@ async def delete_file(
     usecase: FileUseCase = Depends(Provide[FileContainer.service]),
 ):
     file = await usecase.delete_file(file_id)
-    return FileResponse(data=_to_payload(file))
+    return FileResponse(
+        data=FilePayload(
+            id=str(file.id),
+            file_name=file.file_name,
+            file_path=file.file_path,
+            file_extension=file.file_extension,
+            file_size=file.file_size,
+            mime_type=file.mime_type,
+            status=file.status,
+        )
+    )

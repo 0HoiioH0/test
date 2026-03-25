@@ -2,7 +2,6 @@ from dependency_injector.wiring import Provide, inject
 from fastapi import APIRouter, Cookie, Depends, Response
 
 from app.auth.adapter.input.api.v1.request import LoginRequest
-from app.auth.adapter.input.api.v1.response import AuthPayload, AuthResponse
 from app.auth.application.dto import AuthTokensDTO
 from app.auth.container import AuthContainer
 from app.auth.domain.command import (
@@ -42,18 +41,6 @@ def _clear_auth_cookies(response: Response) -> None:
     response.delete_cookie(key=config.REFRESH_TOKEN_COOKIE_NAME, path="/")
 
 
-def _build_auth_response(tokens: AuthTokensDTO) -> AuthResponse:
-    return AuthResponse(
-        data=AuthPayload(
-            user_id=tokens.user_id,
-            organization_id=tokens.organization_id,
-            organization_code=tokens.organization_code,
-            role=tokens.role,
-            authenticated=True,
-        )
-    )
-
-
 @router.post("/login")
 @inject
 async def login(
@@ -63,7 +50,7 @@ async def login(
 ):
     tokens = await usecase.login(LoginCommand(**request.model_dump()))
     _set_auth_cookies(response, tokens)
-    return _build_auth_response(tokens)
+    return None
 
 
 @router.post("/refresh")
@@ -80,7 +67,7 @@ async def refresh(
         RefreshTokenCommand(refresh_token=refresh_token)
     )
     _set_auth_cookies(response, tokens)
-    return _build_auth_response(tokens)
+    return None
 
 
 @router.post("/logout")
@@ -95,4 +82,4 @@ async def logout(
 ):
     await usecase.logout(LogoutCommand(refresh_token=refresh_token))
     _clear_auth_cookies(response)
-    return AuthResponse(data=AuthPayload(authenticated=False))
+    return None

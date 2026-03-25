@@ -44,8 +44,7 @@ def test_login_sets_auth_cookies(client, monkeypatch):
     )
 
     assert response.status_code == 200
-    assert response.json()["data"]["authenticated"] is True
-    assert response.json()["data"]["organization_code"] == "univ_hansung"
+    assert response.json() is None
     assert response.cookies.get("access_token") == "access-token-value"
     assert response.cookies.get("refresh_token") == "refresh-token-value"
 
@@ -122,7 +121,7 @@ def test_refresh_rotates_auth_cookies(client, monkeypatch):
     response = client.post("/api/auth/refresh")
 
     assert response.status_code == 200
-    assert response.json()["data"]["authenticated"] is True
+    assert response.json() is None
     assert response.cookies.get("access_token") == "access-token-value"
     assert response.cookies.get("refresh_token") == "refresh-token-value"
 
@@ -146,7 +145,7 @@ def test_logout_clears_auth_cookies(client, monkeypatch):
 
     set_cookie_header = response.headers.get("set-cookie", "")
     assert response.status_code == 200
-    assert response.json()["data"]["authenticated"] is False
+    assert response.json() is None
     assert "access_token=" in set_cookie_header
     assert "refresh_token=" in set_cookie_header
 
