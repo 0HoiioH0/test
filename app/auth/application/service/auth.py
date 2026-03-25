@@ -21,6 +21,7 @@ from app.organization.domain.service import OrganizationAuthService
 from app.user.domain.entity import User, UserRole, UserStatus
 from app.user.domain.repository import UserRepository
 from core.config import config
+from core.db.transactional import transactional
 from core.domain.types import TokenType
 from core.helpers.token import TokenHelper
 
@@ -39,6 +40,7 @@ class AuthService(AuthUseCase):
         self.auth_token_repository = auth_token_repository
         self.organization_auth_service = organization_auth_service
 
+    @transactional
     async def login(self, command: LoginCommand) -> AuthTokensDTO:
         organization = await self.organization_repository.get_by_code(
             command.organization_code
