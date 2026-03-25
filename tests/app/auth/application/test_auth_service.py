@@ -34,9 +34,8 @@ class InMemoryOrganizationRepository(OrganizationRepository):
     def __init__(self, organizations: list[Organization] | None = None):
         self.organizations = {org.id: org for org in organizations or []}
 
-    async def save(self, entity: Organization) -> Organization:
+    async def save(self, entity: Organization) -> None:
         self.organizations[entity.id] = entity
-        return entity
 
     async def get_by_id(self, entity_id: UUID) -> Organization | None:
         return self.organizations.get(entity_id)
@@ -55,9 +54,18 @@ class InMemoryUserRepository(UserRepository):
     def __init__(self, users: list[User] | None = None):
         self.users = {user.id: user for user in users or []}
 
-    async def save(self, entity: User) -> User:
+    async def save(self, entity: User) -> None:
         self.users[entity.id] = entity
-        return entity
+
+    async def list_by_organization(
+        self,
+        organization_id: UUID,
+    ) -> list[User]:
+        return [
+            user
+            for user in self.users.values()
+            if user.organization_id == organization_id
+        ]
 
     async def get_by_id(self, entity_id: UUID) -> User | None:
         return next(

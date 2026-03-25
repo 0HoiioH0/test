@@ -32,7 +32,8 @@ class UserService(UserUseCase):
             name=command.name,
         )
 
-        return await self.repository.save(user)
+        await self.repository.save(user)
+        return user
 
     async def get_user(self, user_id: UUID) -> User:
         user = await self.repository.get_by_id(user_id)
@@ -80,7 +81,8 @@ class UserService(UserUseCase):
         if "name" in delivered_fields and command.name is not None:
             user.name = command.name
 
-        return await self.repository.save(user)
+        await self.repository.save(user)
+        return user
 
     @transactional
     async def delete_user(self, user_id: UUID) -> User:
@@ -89,4 +91,5 @@ class UserService(UserUseCase):
             raise UserNotFoundException()
 
         user.delete()
-        return await self.repository.save(user)
+        await self.repository.save(user)
+        return user

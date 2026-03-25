@@ -11,8 +11,8 @@ from sqlalchemy import select
 
 
 class ClassroomMaterialSQLAlchemyRepository(ClassroomMaterialRepository):
-    async def save(self, entity: ClassroomMaterial) -> ClassroomMaterial:
-        return await session.merge(entity)
+    async def save(self, entity: ClassroomMaterial) -> None:
+        session.add(entity)
 
     async def get_by_id(self, entity_id: UUID) -> ClassroomMaterial | None:
         query = select(ClassroomMaterial).where(

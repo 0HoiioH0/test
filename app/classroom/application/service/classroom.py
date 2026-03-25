@@ -83,7 +83,8 @@ class ClassroomService(ClassroomUseCase):
                 command.allow_student_material_access
             ),
         )
-        return await self.repository.save(classroom)
+        await self.repository.save(classroom)
+        return classroom
 
     async def get_classroom(
         self,
@@ -219,7 +220,8 @@ class ClassroomService(ClassroomUseCase):
         classroom.professor_ids = professor_ids
         classroom.student_ids = student_ids
 
-        return await self.repository.save(classroom)
+        await self.repository.save(classroom)
+        return classroom
 
     @transactional
     async def delete_classroom(
@@ -267,7 +269,8 @@ class ClassroomService(ClassroomUseCase):
             student_ids=updated_student_ids,
         )
         classroom.student_ids = _unique_ids(updated_student_ids)
-        return await self.repository.save(classroom)
+        await self.repository.save(classroom)
+        return classroom
 
     @transactional
     async def remove_classroom_student(
@@ -292,7 +295,8 @@ class ClassroomService(ClassroomUseCase):
             for user_id in classroom.student_ids
             if user_id != command.student_id
         ]
-        return await self.repository.save(classroom)
+        await self.repository.save(classroom)
+        return classroom
 
     async def _validate_members(
         self,

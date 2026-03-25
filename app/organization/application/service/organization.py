@@ -33,7 +33,8 @@ class OrganizationService(OrganizationUseCase):
             auth_provider=command.auth_provider,
             is_active=command.is_active,
         )
-        return await self.repository.save(organization)
+        await self.repository.save(organization)
+        return organization
 
     async def get_organization(self, organization_id: UUID) -> Organization:
         organization = await self.repository.get_by_id(organization_id)
@@ -80,7 +81,8 @@ class OrganizationService(OrganizationUseCase):
         if "is_active" in delivered_fields and command.is_active is not None:
             organization.is_active = command.is_active
 
-        return await self.repository.save(organization)
+        await self.repository.save(organization)
+        return organization
 
     @transactional
     async def delete_organization(self, organization_id: UUID) -> Organization:
@@ -89,4 +91,5 @@ class OrganizationService(OrganizationUseCase):
             raise OrganizationNotFoundException()
 
         organization.delete()
-        return await self.repository.save(organization)
+        await self.repository.save(organization)
+        return organization

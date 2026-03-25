@@ -83,13 +83,13 @@ class AuthService(AuthUseCase):
             user.email = identity.email
             user.name = identity.name
 
-        saved_user = await self.user_repository.save(user)
+        await self.user_repository.save(user)
 
         return await self._issue_tokens(
-            user_id=saved_user.id,
+            user_id=user.id,
             organization_id=organization.id,
             organization_code=organization.code,
-            role=saved_user.role,
+            role=user.role,
         )
 
     async def refresh(self, command: RefreshTokenCommand) -> AuthTokens:

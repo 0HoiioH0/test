@@ -37,9 +37,8 @@ class InMemoryClassroomMaterialRepository(ClassroomMaterialRepository):
     def __init__(self, materials: list[ClassroomMaterial] | None = None):
         self.materials = {material.id: material for material in materials or []}
 
-    async def save(self, entity: ClassroomMaterial) -> ClassroomMaterial:
+    async def save(self, entity: ClassroomMaterial) -> None:
         self.materials[entity.id] = entity
-        return entity
 
     async def get_by_id(self, entity_id: UUID) -> ClassroomMaterial | None:
         return self.materials.get(entity_id)
@@ -324,7 +323,11 @@ async def test_update_classroom_material_replaces_file_and_deletes_old():
             role=UserRole.PROFESSOR,
             user_id=PROFESSOR_ID,
         ),
-        command=UpdateClassroomMaterialCommand(title="수정 자료"),
+        command=UpdateClassroomMaterialCommand(
+            title="수정 자료",
+            week=1,
+            description="소개 자료",
+        ),
         file_upload=FileUploadData(
             file_name="week1-v2.pdf",
             mime_type="application/pdf",

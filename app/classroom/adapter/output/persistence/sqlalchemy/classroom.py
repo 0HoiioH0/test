@@ -50,9 +50,8 @@ class ClassroomSQLAlchemyRepository(ClassroomRepository):
         result = await session.execute(query)
         return list(result.scalars().all())
 
-    async def save(self, entity: Classroom) -> Classroom:
+    async def save(self, entity: Classroom) -> None:
         session.add(entity)
-        return entity
 
     async def delete(self, entity: Classroom) -> None:
         await session.delete(entity)

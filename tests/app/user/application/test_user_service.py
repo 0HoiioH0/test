@@ -18,9 +18,8 @@ class InMemoryUserRepository(UserRepository):
     def __init__(self):
         self.users: dict[UUID, User] = {}
 
-    async def save(self, entity: User) -> User:
+    async def save(self, entity: User) -> None:
         self.users[entity.id] = entity
-        return entity
 
     async def get_by_id(self, entity_id: UUID) -> User | None:
         user = self.users.get(entity_id)
@@ -44,8 +43,20 @@ class InMemoryUserRepository(UserRepository):
             None,
         )
 
-    async def list(self) -> list[User]:
+    async def list_entities(self) -> list[User]:
         return [user for user in self.users.values() if not user.is_deleted]
+
+    async def list_by_organization(
+        self,
+        organization_id: UUID,
+    ) -> list[User]:
+        return [
+            user
+            for user in self.users.values()
+            if user.organization_id == organization_id and not user.is_deleted
+        ]
+
+    list = list_entities
 
 
 @pytest.mark.asyncio

@@ -38,9 +38,8 @@ class InMemoryClassroomRepository(ClassroomRepository):
             classroom.id: classroom for classroom in classrooms or []
         }
 
-    async def save(self, entity: Classroom) -> Classroom:
+    async def save(self, entity: Classroom) -> None:
         self.classrooms[entity.id] = entity
-        return entity
 
     async def get_by_id(self, entity_id: UUID) -> Classroom | None:
         return self.classrooms.get(entity_id)
@@ -87,9 +86,8 @@ class InMemoryUserRepository(UserRepository):
     def __init__(self, users: list[User]):
         self.users = {user.id: user for user in users}
 
-    async def save(self, entity: User) -> User:
+    async def save(self, entity: User) -> None:
         self.users[entity.id] = entity
-        return entity
 
     async def get_by_id(self, entity_id: UUID) -> User | None:
         return self.users.get(entity_id)
@@ -468,7 +466,16 @@ async def test_remove_classroom_student_not_enrolled_raises():
 @pytest.mark.asyncio
 async def test_delete_classroom_success():
     classroom = make_classroom()
-    service = make_service([classroom])
+    repository = InMemoryClassroomRepository([classroom])
+    service = ClassroomService(
+        repository=repository,
+        user_repository=InMemoryUserRepository([
+            make_user(PROFESSOR_ID, UserRole.PROFESSOR),
+            make_user(SECOND_PROFESSOR_ID, UserRole.PROFESSOR),
+            make_user(STUDENT_ID, UserRole.STUDENT),
+            make_user(SECOND_STUDENT_ID, UserRole.STUDENT),
+        ]),
+    )
 
     deleted_classroom = await service.delete_classroom(
         classroom_id=classroom.id,
@@ -476,4 +483,4 @@ async def test_delete_classroom_success():
     )
 
     assert deleted_classroom.id == classroom.id
-    assert classroom.id not in service.repository.classrooms
+    assert classroom.id not in repository.classrooms

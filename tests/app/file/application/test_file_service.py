@@ -18,9 +18,8 @@ class InMemoryFileRepository(FileRepository):
     def __init__(self):
         self.files: dict[UUID, File] = {}
 
-    async def save(self, entity: File) -> File:
+    async def save(self, entity: File) -> None:
         self.files[entity.id] = entity
-        return entity
 
     async def get_by_id(self, entity_id: UUID) -> File | None:
         file = self.files.get(entity_id)

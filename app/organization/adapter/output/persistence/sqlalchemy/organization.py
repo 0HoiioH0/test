@@ -25,6 +25,5 @@ class OrganizationSQLAlchemyRepository(OrganizationRepository):
         result = await session.execute(query)
         return result.scalars().all()
 
-    async def save(self, entity: Organization) -> Organization:
+    async def save(self, entity: Organization) -> None:
         session.add(entity)
-        return entity

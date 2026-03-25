@@ -61,10 +61,8 @@ class ClassroomMaterialService(ClassroomMaterialUseCase):
             description=command.description,
             uploaded_by=current_user.id,
         )
-        saved_material = await self.repository.save(material)
-        return ClassroomMaterialDetail(
-            material=saved_material, file=uploaded_file
-        )
+        await self.repository.save(material)
+        return ClassroomMaterialDetail(material=material, file=uploaded_file)
 
     async def list_classroom_materials(
         self,
@@ -131,15 +129,15 @@ class ClassroomMaterialService(ClassroomMaterialUseCase):
             )
             old_file_id = material.file_id
             material.file_id = replacement_file.id
-            saved_material = await self.repository.save(material)
+            await self.repository.save(material)
             await self.file_usecase.delete_file(old_file_id)
             return ClassroomMaterialDetail(
-                material=saved_material,
+                material=material,
                 file=replacement_file,
             )
 
-        saved_material = await self.repository.save(material)
-        return await self._to_result(saved_material)
+        await self.repository.save(material)
+        return await self._to_result(material)
 
     @transactional
     async def delete_classroom_material(

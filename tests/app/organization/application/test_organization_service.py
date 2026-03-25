@@ -27,9 +27,8 @@ class InMemoryOrganizationRepository(OrganizationRepository):
             for organization in organizations or []
         }
 
-    async def save(self, entity: Organization) -> Organization:
+    async def save(self, entity: Organization) -> None:
         self.organizations[entity.id] = entity
-        return entity
 
     async def get_by_id(self, entity_id: UUID) -> Organization | None:
         return self.organizations.get(entity_id)

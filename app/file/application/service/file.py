@@ -27,7 +27,8 @@ class FileService(FileUseCase):
             file_size=command.file_size,
             mime_type=command.mime_type,
         )
-        return await self.repository.save(file)
+        await self.repository.save(file)
+        return file
 
     @transactional
     async def upload_file(
@@ -54,7 +55,8 @@ class FileService(FileUseCase):
             mime_type=file_upload.mime_type,
             status=status,
         )
-        return await self.repository.save(file)
+        await self.repository.save(file)
+        return file
 
     async def list_files(self) -> list[File]:
         return list(await self.repository.list())
@@ -88,7 +90,8 @@ class FileService(FileUseCase):
         if "status" in delivered_fields and command.status is not None:
             file.status = command.status
 
-        return await self.repository.save(file)
+        await self.repository.save(file)
+        return file
 
     @transactional
     async def delete_file(self, file_id: UUID) -> File:
@@ -96,4 +99,5 @@ class FileService(FileUseCase):
         if file.status != FileStatus.DELETED:
             await self.storage.delete(path=file.file_path)
         file.delete()
-        return await self.repository.save(file)
+        await self.repository.save(file)
+        return file

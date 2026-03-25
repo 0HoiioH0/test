@@ -47,6 +47,5 @@ class UserSQLAlchemyRepository(UserRepository):
         result = await session.execute(query)
         return result.scalars().all()
 
-    async def save(self, entity: User) -> User:
+    async def save(self, entity: User) -> None:
         session.add(entity)
-        return entity
