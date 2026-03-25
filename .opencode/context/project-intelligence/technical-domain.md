@@ -1,4 +1,4 @@
-<!-- Context: project-intelligence/technical | Priority: critical | Version: 1.3 | Updated: 2026-03-25 -->
+<!-- Context: project-intelligence/technical | Priority: critical | Version: 1.4 | Updated: 2026-03-25 -->
 
 # Technical Domain
 
@@ -112,6 +112,10 @@ class UserService(UserUseCase):
 - CI는 GitHub Actions에서 lint 후 test 순서로 실행된다.
 - 테스트 전 Alembic migration과 앱 bootstrap smoke test를 수행한다.
 - API 테스트는 `TestClient(create_app())`와 monkeypatch 패턴을 자주 사용한다.
+- 기능 작업은 TDD를 기본으로 하며 구현 전에 실패하는 테스트를 먼저 작성한다.
+- 기본 순서는 `실패하는 테스트 작성 -> 최소 구현 -> 테스트 통과 -> 리팩터링`이다.
+- 가능하면 기존 테스트는 수정하지 않고 새 테스트 추가로 검증 범위를 넓힌다.
+- 기존 테스트 수정은 계약 변경, 잘못된 테스트, 깨진 테스트 인프라처럼 불가피한 경우로 제한한다.
 - Alembic 실행 시 `-x env=local|dev|test|prod`로 환경을 명시할 수 있다.
 - DB migration 전에는 `current -> upgrade --sql -> -x dry-run upgrade -> 실제 upgrade` 순서를 항상 따른다.
 - 스키마 변경 시에는 `alembic revision --autogenerate`를 우선 사용하고 migration 파일 수동 수정은 최소화한다.

@@ -1,4 +1,4 @@
-<!-- Context: project-intelligence/notes | Priority: high | Version: 1.1 | Updated: 2026-03-25 -->
+<!-- Context: project-intelligence/notes | Priority: high | Version: 1.2 | Updated: 2026-03-25 -->
 
 # Living Notes
 
@@ -10,6 +10,7 @@
 - **Recent Incident**: `t_classroom` 누락으로 `/api/classrooms` 500 발생 후 해결
 - **Migration Rule**: `current -> --sql -> dry-run -> upgrade`
 - **Env Rule**: Alembic은 항상 `-x env=...`와 함께 실행
+- **Testing Rule**: 구현 전 테스트 작성, 기존 테스트 수정 최소화
 
 ## Active Notes
 **Resolved Incident: classroom schema drift**
@@ -22,6 +23,7 @@
 - 도메인 의미가 있는 규칙은 가능한 각 도메인 계층으로 이동
 - 얇은 라우터 유지, 서비스는 유스케이스 단위로 작게 유지
 - domain -> application DTO 의존 같은 경계 역전을 줄이는 리팩토링 진행 중
+- 테스트 보강 작업은 TDD 기준으로 재정렬하고, 가능하면 기존 테스트는 보존한다
 
 ## Technical Debt
 | Item | Impact | Priority | Mitigation |

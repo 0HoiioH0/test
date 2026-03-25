@@ -136,6 +136,27 @@ async def test_get_file_not_found():
 
 
 @pytest.mark.asyncio
+async def test_list_files_returns_only_non_deleted_files():
+    repo = InMemoryFileRepository()
+    service = FileService(repository=repo, storage=FakeFileStorage())
+    active_file = await service.create_file(make_create_command())
+    deleted_file = await service.create_file(
+        CreateFileCommand(
+            file_name="old.pdf",
+            file_path="uploads/old.pdf",
+            file_extension="pdf",
+            file_size=2048,
+            mime_type="application/pdf",
+        )
+    )
+    await service.delete_file(deleted_file.id)
+
+    files = await service.list_files()
+
+    assert [file.id for file in files] == [active_file.id]
+
+
+@pytest.mark.asyncio
 async def test_update_file_success():
     repo = InMemoryFileRepository()
     service = FileService(repository=repo, storage=FakeFileStorage())
@@ -172,6 +193,18 @@ async def test_update_file_omitted_fields_keep_existing_values():
 
 
 @pytest.mark.asyncio
+async def test_update_file_not_found():
+    repo = InMemoryFileRepository()
+    service = FileService(repository=repo, storage=FakeFileStorage())
+
+    with pytest.raises(FileNotFoundException):
+        await service.update_file(
+            UUID("00000000-0000-0000-0000-000000000000"),
+            UpdateFileCommand(file_name="missing.pdf"),
+        )
+
+
+@pytest.mark.asyncio
 async def test_delete_file_excludes_from_list_and_removes_storage():
     repo = InMemoryFileRepository()
     storage = FakeFileStorage()
@@ -184,3 +217,12 @@ async def test_delete_file_excludes_from_list_and_removes_storage():
     assert deleted_file.status == FileStatus.DELETED
     assert listed_files == []
     assert storage.delete_calls == ["uploads/avatar.png"]
+
+
+@pytest.mark.asyncio
+async def test_delete_file_not_found():
+    repo = InMemoryFileRepository()
+    service = FileService(repository=repo, storage=FakeFileStorage())
+
+    with pytest.raises(FileNotFoundException):
+        await service.delete_file(UUID("00000000-0000-0000-0000-000000000000"))

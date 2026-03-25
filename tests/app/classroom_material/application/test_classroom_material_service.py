@@ -203,6 +203,12 @@ def make_material() -> ClassroomMaterial:
     return material
 
 
+def make_other_classroom_material() -> ClassroomMaterial:
+    material = make_material()
+    material.classroom_id = UUID("88888888-8888-8888-8888-888888888888")
+    return material
+
+
 @pytest.mark.asyncio
 async def test_create_classroom_material_success():
     repository = InMemoryClassroomMaterialRepository()
@@ -339,6 +345,101 @@ async def test_update_classroom_material_replaces_file_and_deletes_old():
     assert result.material.file_id == REPLACEMENT_FILE_ID
     assert file_usecase.deleted_file_ids == [FILE_ID]
     assert result.file.file_name == "week1-v2.pdf"
+
+
+@pytest.mark.asyncio
+async def test_update_classroom_material_metadata_only_keeps_existing_file():
+    material = make_material()
+    repository = InMemoryClassroomMaterialRepository([material])
+    file_usecase = FakeFileUseCase()
+    current_file = File(
+        file_name="week1.pdf",
+        file_path="classrooms/week1.pdf",
+        file_extension="pdf",
+        file_size=10,
+        mime_type="application/pdf",
+        status=FileStatus.ACTIVE,
+    )
+    current_file.id = FILE_ID
+    file_usecase.files[FILE_ID] = current_file
+    service = ClassroomMaterialService(
+        repository=repository,
+        classroom_usecase=FakeClassroomUseCase(make_classroom()),
+        file_usecase=file_usecase,
+    )
+
+    result = await service.update_classroom_material(
+        classroom_id=CLASSROOM_ID,
+        material_id=MATERIAL_ID,
+        current_user=make_current_user(
+            role=UserRole.PROFESSOR,
+            user_id=PROFESSOR_ID,
+        ),
+        command=UpdateClassroomMaterialCommand(
+            title="메타데이터만 수정",
+            week=2,
+            description=None,
+        ),
+    )
+
+    assert result.material.title == "메타데이터만 수정"
+    assert result.material.week == 2
+    assert result.material.file_id == FILE_ID
+    assert result.file.id == FILE_ID
+    assert file_usecase.uploaded_payloads == []
+    assert file_usecase.deleted_file_ids == []
+
+
+@pytest.mark.asyncio
+async def test_get_classroom_material_from_other_classroom_raises_not_found():
+    file_usecase = FakeFileUseCase()
+    file_usecase.files[FILE_ID] = File(
+        file_name="week1.pdf",
+        file_path="classrooms/week1.pdf",
+        file_extension="pdf",
+        file_size=10,
+        mime_type="application/pdf",
+        status=FileStatus.ACTIVE,
+    )
+    file_usecase.files[FILE_ID].id = FILE_ID
+    service = ClassroomMaterialService(
+        repository=InMemoryClassroomMaterialRepository([
+            make_other_classroom_material()
+        ]),
+        classroom_usecase=FakeClassroomUseCase(make_classroom()),
+        file_usecase=file_usecase,
+    )
+
+    with pytest.raises(ClassroomMaterialNotFoundException):
+        await service.get_classroom_material(
+            classroom_id=CLASSROOM_ID,
+            material_id=MATERIAL_ID,
+            current_user=make_current_user(
+                role=UserRole.PROFESSOR,
+                user_id=PROFESSOR_ID,
+            ),
+        )
+
+
+@pytest.mark.asyncio
+async def test_delete_other_classroom_material_raises_not_found():
+    service = ClassroomMaterialService(
+        repository=InMemoryClassroomMaterialRepository([
+            make_other_classroom_material()
+        ]),
+        classroom_usecase=FakeClassroomUseCase(make_classroom()),
+        file_usecase=FakeFileUseCase(),
+    )
+
+    with pytest.raises(ClassroomMaterialNotFoundException):
+        await service.delete_classroom_material(
+            classroom_id=CLASSROOM_ID,
+            material_id=MATERIAL_ID,
+            current_user=make_current_user(
+                role=UserRole.PROFESSOR,
+                user_id=PROFESSOR_ID,
+            ),
+        )
 
 
 @pytest.mark.asyncio

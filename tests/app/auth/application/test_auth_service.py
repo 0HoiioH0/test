@@ -22,7 +22,7 @@ from app.organization.domain.entity import (
 )
 from app.organization.domain.repository import OrganizationRepository
 from app.organization.domain.service import OrganizationAuthService
-from app.user.domain.entity import User, UserRole
+from app.user.domain.entity import User, UserRole, UserStatus
 from app.user.domain.repository import UserRepository
 from core.domain.types import TokenType
 from core.helpers.token import TokenHelper
@@ -280,6 +280,78 @@ async def test_login_invalid_credentials_does_not_create_user():
 
 
 @pytest.mark.asyncio
+async def test_login_converts_provider_error_to_invalid_credentials():
+    class FailingService(OrganizationAuthService):
+        async def authenticate(self, **kwargs):
+            del kwargs
+            raise RuntimeError("unexpected provider error")
+
+    service = AuthService(
+        organization_repository=InMemoryOrganizationRepository([
+            make_organization()
+        ]),
+        user_repository=InMemoryUserRepository(),
+        auth_token_repository=InMemoryAuthTokenRepository(),
+        organization_auth_service=FailingService(),
+    )
+
+    with pytest.raises(AuthInvalidCredentialsException):
+        await service.login(
+            LoginCommand(
+                organization_code="univ_hansung",
+                login_id="20260001",
+                password="secure_password123",
+            )
+        )
+
+
+@pytest.mark.asyncio
+async def test_login_rejects_deleted_existing_user():
+    existing_user = make_user()
+    existing_user.is_deleted = True
+    service = AuthService(
+        organization_repository=InMemoryOrganizationRepository([
+            make_organization()
+        ]),
+        user_repository=InMemoryUserRepository([existing_user]),
+        auth_token_repository=InMemoryAuthTokenRepository(),
+        organization_auth_service=FakeOrganizationAuthService(),
+    )
+
+    with pytest.raises(AuthInvalidCredentialsException):
+        await service.login(
+            LoginCommand(
+                organization_code="univ_hansung",
+                login_id="20260001",
+                password="secure_password123",
+            )
+        )
+
+
+@pytest.mark.asyncio
+async def test_login_rejects_blocked_existing_user():
+    existing_user = make_user()
+    existing_user.status = UserStatus.BLOCKED
+    service = AuthService(
+        organization_repository=InMemoryOrganizationRepository([
+            make_organization()
+        ]),
+        user_repository=InMemoryUserRepository([existing_user]),
+        auth_token_repository=InMemoryAuthTokenRepository(),
+        organization_auth_service=FakeOrganizationAuthService(),
+    )
+
+    with pytest.raises(AuthInvalidCredentialsException):
+        await service.login(
+            LoginCommand(
+                organization_code="univ_hansung",
+                login_id="20260001",
+                password="secure_password123",
+            )
+        )
+
+
+@pytest.mark.asyncio
 async def test_login_identity_provider_not_configured_bubbles_up():
     class FailingService(OrganizationAuthService):
         async def authenticate(self, **kwargs):
@@ -398,6 +470,50 @@ async def test_refresh_with_unknown_token_raises():
 
 
 @pytest.mark.asyncio
+async def test_refresh_with_access_token_raises():
+    service = AuthService(
+        organization_repository=InMemoryOrganizationRepository([
+            make_organization()
+        ]),
+        user_repository=InMemoryUserRepository(),
+        auth_token_repository=InMemoryAuthTokenRepository(),
+        organization_auth_service=FakeOrganizationAuthService(),
+    )
+    access_token = TokenHelper.create_token(
+        payload={"sub": str(UUID(int=1))},
+        token_type=TokenType.ACCESS,
+    )
+
+    with pytest.raises(AuthInvalidRefreshTokenException):
+        await service.refresh(RefreshTokenCommand(refresh_token=access_token))
+
+
+@pytest.mark.asyncio
+async def test_refresh_raises_when_organization_is_missing():
+    user = make_user()
+    auth_token_repository = InMemoryAuthTokenRepository()
+    service = AuthService(
+        organization_repository=InMemoryOrganizationRepository(),
+        user_repository=InMemoryUserRepository([user]),
+        auth_token_repository=auth_token_repository,
+        organization_auth_service=FakeOrganizationAuthService(),
+    )
+    refresh_token = TokenHelper.create_token(
+        payload={"sub": str(user.id), "jti": "refresh-jti"},
+        token_type=TokenType.REFRESH,
+    )
+    await auth_token_repository.save(
+        user_id=user.id,
+        jti="refresh-jti",
+        refresh_token=refresh_token,
+        expires_in=3600,
+    )
+
+    with pytest.raises(AuthInvalidRefreshTokenException):
+        await service.refresh(RefreshTokenCommand(refresh_token=refresh_token))
+
+
+@pytest.mark.asyncio
 async def test_logout_deletes_refresh_token():
     auth_token_repository = InMemoryAuthTokenRepository()
     service = AuthService(
@@ -427,3 +543,20 @@ async def test_logout_deletes_refresh_token():
         )
         is None
     )
+
+
+@pytest.mark.asyncio
+async def test_logout_ignores_malformed_refresh_token():
+    auth_token_repository = InMemoryAuthTokenRepository()
+    service = AuthService(
+        organization_repository=InMemoryOrganizationRepository([
+            make_organization()
+        ]),
+        user_repository=InMemoryUserRepository(),
+        auth_token_repository=auth_token_repository,
+        organization_auth_service=FakeOrganizationAuthService(),
+    )
+
+    await service.logout(LogoutCommand(refresh_token="not-a-jwt"))
+
+    assert auth_token_repository.tokens == {}
