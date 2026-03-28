@@ -39,6 +39,7 @@ from core.fastapi.dependencies.permission import (
 )
 
 router = APIRouter(prefix="/classrooms/{classroom_id}/exams", tags=["exams"])
+student_router = APIRouter(prefix="/exams", tags=["exams"])
 
 
 def _build_exam_payload(exam) -> ExamPayload:
@@ -176,20 +177,18 @@ async def get_exam(
     return ExamResponse(data=_build_exam_payload(exam))
 
 
-@router.post(
+@student_router.post(
     "/{exam_id}/sessions",
     response_model=ExamSessionResponse,
     dependencies=[Depends(PermissionDependency([IsAuthenticated]))],
 )
 @inject
 async def start_exam_session(
-    classroom_id: UUID,
     exam_id: UUID,
     current_user: CurrentUser = Depends(get_current_user),
     usecase: ExamUseCase = Depends(Provide[ExamContainer.service]),
 ):
     result = await usecase.start_exam_session(
-        classroom_id=classroom_id,
         exam_id=exam_id,
         current_user=current_user,
     )
@@ -201,20 +200,18 @@ async def start_exam_session(
     )
 
 
-@router.get(
+@student_router.get(
     "/{exam_id}/results/me",
     response_model=ExamResultListResponse,
     dependencies=[Depends(PermissionDependency([IsAuthenticated]))],
 )
 @inject
 async def list_my_exam_results(
-    classroom_id: UUID,
     exam_id: UUID,
     current_user: CurrentUser = Depends(get_current_user),
     usecase: ExamUseCase = Depends(Provide[ExamContainer.service]),
 ):
     results = await usecase.list_my_exam_results(
-        classroom_id=classroom_id,
         exam_id=exam_id,
         current_user=current_user,
     )
@@ -223,14 +220,13 @@ async def list_my_exam_results(
     )
 
 
-@router.post(
+@student_router.post(
     "/{exam_id}/sessions/{session_id}/turns",
     response_model=ExamTurnResponse,
     dependencies=[Depends(PermissionDependency([IsAuthenticated]))],
 )
 @inject
 async def record_exam_turn(
-    classroom_id: UUID,
     exam_id: UUID,
     session_id: UUID,
     request: RecordExamTurnRequest,
@@ -238,7 +234,6 @@ async def record_exam_turn(
     usecase: ExamUseCase = Depends(Provide[ExamContainer.service]),
 ):
     turn = await usecase.record_exam_turn(
-        classroom_id=classroom_id,
         exam_id=exam_id,
         session_id=session_id,
         current_user=current_user,
@@ -247,14 +242,13 @@ async def record_exam_turn(
     return ExamTurnResponse(data=_build_exam_turn_payload(turn))
 
 
-@router.post(
+@student_router.post(
     "/{exam_id}/sessions/{session_id}/complete",
     response_model=ExamSessionResponse,
     dependencies=[Depends(PermissionDependency([IsAuthenticated]))],
 )
 @inject
 async def complete_exam_session(
-    classroom_id: UUID,
     exam_id: UUID,
     session_id: UUID,
     request: CompleteExamSessionRequest,
@@ -262,7 +256,6 @@ async def complete_exam_session(
     usecase: ExamUseCase = Depends(Provide[ExamContainer.service]),
 ):
     session = await usecase.complete_exam_session(
-        classroom_id=classroom_id,
         exam_id=exam_id,
         session_id=session_id,
         current_user=current_user,
@@ -273,14 +266,13 @@ async def complete_exam_session(
     )
 
 
-@router.post(
+@student_router.post(
     "/{exam_id}/sessions/{session_id}/results/finalize",
     response_model=ExamResultResponse,
     dependencies=[Depends(PermissionDependency([IsAuthenticated]))],
 )
 @inject
 async def finalize_exam_result(
-    classroom_id: UUID,
     exam_id: UUID,
     session_id: UUID,
     request: FinalizeExamResultRequest,
@@ -288,7 +280,6 @@ async def finalize_exam_result(
     usecase: ExamUseCase = Depends(Provide[ExamContainer.service]),
 ):
     result = await usecase.finalize_exam_result(
-        classroom_id=classroom_id,
         exam_id=exam_id,
         session_id=session_id,
         current_user=current_user,

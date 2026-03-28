@@ -194,9 +194,7 @@ def test_start_exam_session_returns_200_for_student(client, monkeypatch):
     monkeypatch.setattr(UserSQLAlchemyRepository, "get_by_id", get_by_id_stub)
     set_access_token_cookie(client, student_user)
 
-    response = client.post(
-        f"/api/classrooms/{CLASSROOM_ID}/exams/{EXAM_ID}/sessions"
-    )
+    response = client.post(f"/api/exams/{EXAM_ID}/sessions")
 
     assert response.status_code == 200
     assert response.json()["data"]["exam_id"] == str(EXAM_ID)
@@ -228,9 +226,7 @@ def test_list_my_exam_results_returns_200_for_student(client, monkeypatch):
     monkeypatch.setattr(UserSQLAlchemyRepository, "get_by_id", get_by_id_stub)
     set_access_token_cookie(client, student_user)
 
-    response = client.get(
-        f"/api/classrooms/{CLASSROOM_ID}/exams/{EXAM_ID}/results/me"
-    )
+    response = client.get(f"/api/exams/{EXAM_ID}/results/me")
 
     assert response.status_code == 200
     assert len(response.json()["data"]) == 1
@@ -262,7 +258,7 @@ def test_record_exam_turn_returns_200_for_student(client, monkeypatch):
     set_access_token_cookie(client, student_user)
 
     response = client.post(
-        f"/api/classrooms/{CLASSROOM_ID}/exams/{EXAM_ID}/sessions/"
+        f"/api/exams/{EXAM_ID}/sessions/"
         "66666666-6666-6666-6666-666666666666/turns",
         json={
             "role": "assistant",
@@ -304,7 +300,7 @@ def test_complete_exam_session_returns_200_for_student(client, monkeypatch):
     set_access_token_cookie(client, student_user)
 
     response = client.post(
-        f"/api/classrooms/{CLASSROOM_ID}/exams/{EXAM_ID}/sessions/"
+        f"/api/exams/{EXAM_ID}/sessions/"
         "66666666-6666-6666-6666-666666666666/complete",
         json={"occurred_at": ENDS_AT.isoformat()},
     )
@@ -339,7 +335,7 @@ def test_finalize_exam_result_returns_200_for_student(client, monkeypatch):
     set_access_token_cookie(client, student_user)
 
     response = client.post(
-        f"/api/classrooms/{CLASSROOM_ID}/exams/{EXAM_ID}/sessions/"
+        f"/api/exams/{EXAM_ID}/sessions/"
         "66666666-6666-6666-6666-666666666666/results/finalize",
         json={
             "overall_score": 92,

@@ -127,13 +127,11 @@ class ExamService(ExamUseCase):
     async def start_exam_session(
         self,
         *,
-        classroom_id: UUID,
         exam_id: UUID,
         current_user: CurrentUser,
     ) -> StartedExamSession:
         self._ensure_student(current_user)
-        exam = await self.get_exam(
-            classroom_id=classroom_id,
+        exam = await self._get_student_exam(
             exam_id=exam_id,
             current_user=current_user,
         )
@@ -170,13 +168,11 @@ class ExamService(ExamUseCase):
     async def list_my_exam_results(
         self,
         *,
-        classroom_id: UUID,
         exam_id: UUID,
         current_user: CurrentUser,
     ) -> Sequence[ExamResult]:
         self._ensure_student(current_user)
-        await self.get_exam(
-            classroom_id=classroom_id,
+        await self._get_student_exam(
             exam_id=exam_id,
             current_user=current_user,
         )
@@ -189,15 +185,13 @@ class ExamService(ExamUseCase):
     async def record_exam_turn(
         self,
         *,
-        classroom_id: UUID,
         exam_id: UUID,
         session_id: UUID,
         current_user: CurrentUser,
         command: RecordExamTurnCommand,
     ) -> ExamTurn:
         self._ensure_student(current_user)
-        await self.get_exam(
-            classroom_id=classroom_id,
+        await self._get_student_exam(
             exam_id=exam_id,
             current_user=current_user,
         )
@@ -225,15 +219,13 @@ class ExamService(ExamUseCase):
     async def complete_exam_session(
         self,
         *,
-        classroom_id: UUID,
         exam_id: UUID,
         session_id: UUID,
         current_user: CurrentUser,
         command: CompleteExamSessionCommand,
     ) -> ExamSession:
         self._ensure_student(current_user)
-        await self.get_exam(
-            classroom_id=classroom_id,
+        await self._get_student_exam(
             exam_id=exam_id,
             current_user=current_user,
         )
@@ -250,15 +242,13 @@ class ExamService(ExamUseCase):
     async def finalize_exam_result(
         self,
         *,
-        classroom_id: UUID,
         exam_id: UUID,
         session_id: UUID,
         current_user: CurrentUser,
         command: FinalizeExamResultCommand,
     ) -> ExamResult:
         self._ensure_student(current_user)
-        await self.get_exam(
-            classroom_id=classroom_id,
+        await self._get_student_exam(
             exam_id=exam_id,
             current_user=current_user,
         )
@@ -320,6 +310,21 @@ class ExamService(ExamUseCase):
             if result.session_id == session_id:
                 return result
         raise AuthForbiddenException()
+
+    async def _get_student_exam(
+        self,
+        *,
+        exam_id: UUID,
+        current_user: CurrentUser,
+    ) -> Exam:
+        exam = await self.repository.get_by_id(exam_id)
+        if exam is None:
+            raise ExamNotFoundException()
+        await self.classroom_usecase.get_classroom(
+            classroom_id=exam.classroom_id,
+            current_user=current_user,
+        )
+        return exam
 
     @staticmethod
     def _ensure_student(current_user: CurrentUser) -> None:

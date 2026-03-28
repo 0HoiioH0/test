@@ -52,7 +52,6 @@ class ExamUseCase(ABC):
     async def start_exam_session(
         self,
         *,
-        classroom_id: UUID,
         exam_id: UUID,
         current_user: CurrentUser,
     ) -> StartedExamSession:
@@ -62,7 +61,6 @@ class ExamUseCase(ABC):
     async def list_my_exam_results(
         self,
         *,
-        classroom_id: UUID,
         exam_id: UUID,
         current_user: CurrentUser,
     ) -> Sequence[ExamResult]:
@@ -72,7 +70,6 @@ class ExamUseCase(ABC):
     async def record_exam_turn(
         self,
         *,
-        classroom_id: UUID,
         exam_id: UUID,
         session_id: UUID,
         current_user: CurrentUser,
@@ -84,7 +81,6 @@ class ExamUseCase(ABC):
     async def complete_exam_session(
         self,
         *,
-        classroom_id: UUID,
         exam_id: UUID,
         session_id: UUID,
         current_user: CurrentUser,
@@ -96,7 +92,6 @@ class ExamUseCase(ABC):
     async def finalize_exam_result(
         self,
         *,
-        classroom_id: UUID,
         exam_id: UUID,
         session_id: UUID,
         current_user: CurrentUser,

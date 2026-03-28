@@ -1,4 +1,4 @@
-<!-- Context: project-intelligence/notes | Priority: high | Version: 1.2 | Updated: 2026-03-25 -->
+<!-- Context: project-intelligence/notes | Priority: high | Version: 1.3 | Updated: 2026-03-25 -->
 
 # Living Notes
 
@@ -24,6 +24,7 @@
 - 얇은 라우터 유지, 서비스는 유스케이스 단위로 작게 유지
 - domain -> application DTO 의존 같은 경계 역전을 줄이는 리팩토링 진행 중
 - 테스트 보강 작업은 TDD 기준으로 재정렬하고, 가능하면 기존 테스트는 보존한다
+- 학생용 시험 API는 classroom 경로를 제거하고 `/api/exams/{exam_id}/sessions/...` 구조로 정리하는 중이다
 
 ## Technical Debt
 | Item | Impact | Priority | Mitigation |

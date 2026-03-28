@@ -478,7 +478,6 @@ async def test_start_exam_session_returns_client_secret_and_session():
     )
 
     result = await service.start_exam_session(
-        classroom_id=CLASSROOM_ID,
         exam_id=EXAM_ID,
         current_user=make_current_user(
             role=UserRole.STUDENT,
@@ -508,7 +507,6 @@ async def test_start_exam_session_professor_forbidden():
 
     with pytest.raises(AuthForbiddenException):
         await service.start_exam_session(
-            classroom_id=CLASSROOM_ID,
             exam_id=EXAM_ID,
             current_user=make_current_user(
                 role=UserRole.PROFESSOR,

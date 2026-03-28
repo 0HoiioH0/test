@@ -344,7 +344,6 @@ async def test_start_exam_session_returns_secret_and_session():
     )
 
     result = await service.start_exam_session(
-        classroom_id=CLASSROOM_ID,
         exam_id=EXAM_ID,
         current_user=make_current_user(
             role=UserRole.STUDENT,
@@ -377,7 +376,6 @@ async def test_start_exam_session_student_only():
 
     with pytest.raises(AuthForbiddenException):
         await service.start_exam_session(
-            classroom_id=CLASSROOM_ID,
             exam_id=EXAM_ID,
             current_user=make_current_user(
                 role=UserRole.PROFESSOR,
@@ -398,7 +396,6 @@ async def test_start_exam_session_includes_exam_context_in_instructions():
     )
 
     await service.start_exam_session(
-        classroom_id=CLASSROOM_ID,
         exam_id=EXAM_ID,
         current_user=make_current_user(
             role=UserRole.STUDENT,
@@ -441,7 +438,6 @@ async def test_list_my_exam_results_returns_current_student_results_only():
     )
 
     results = await service.list_my_exam_results(
-        classroom_id=CLASSROOM_ID,
         exam_id=EXAM_ID,
         current_user=make_current_user(
             role=UserRole.STUDENT,
@@ -479,7 +475,6 @@ async def test_record_exam_turn_saves_question_and_answer_history():
     )
 
     question_turn = await service.record_exam_turn(
-        classroom_id=CLASSROOM_ID,
         exam_id=EXAM_ID,
         session_id=session.id,
         current_user=make_current_user(
@@ -495,7 +490,6 @@ async def test_record_exam_turn_saves_question_and_answer_history():
         ),
     )
     answer_turn = await service.record_exam_turn(
-        classroom_id=CLASSROOM_ID,
         exam_id=EXAM_ID,
         session_id=session.id,
         current_user=make_current_user(
@@ -544,7 +538,6 @@ async def test_record_exam_turn_rejects_other_students_session():
 
     with pytest.raises(AuthForbiddenException):
         await service.record_exam_turn(
-            classroom_id=CLASSROOM_ID,
             exam_id=EXAM_ID,
             session_id=session.id,
             current_user=make_current_user(
@@ -586,7 +579,6 @@ async def test_complete_exam_session_marks_session_completed():
     )
 
     completed_session = await service.complete_exam_session(
-        classroom_id=CLASSROOM_ID,
         exam_id=EXAM_ID,
         session_id=session.id,
         current_user=make_current_user(
@@ -635,7 +627,6 @@ async def test_finalize_exam_result_updates_pending_result():
     )
 
     result = await service.finalize_exam_result(
-        classroom_id=CLASSROOM_ID,
         exam_id=EXAM_ID,
         session_id=session.id,
         current_user=make_current_user(
