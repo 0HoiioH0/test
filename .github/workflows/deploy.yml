@@ -90,33 +90,3 @@ jobs:
 
             docker logs --tail 100 dialearn-backend
             exit 1
-
-      - name: Slack notify success
-        if: success()
-        env:
-          SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
-        run: |
-          payload=$(cat <<EOF
-          {
-            "text": "[Dialearn] Deploy succeeded\n- Workflow: ${{ github.workflow }}\n- Branch: ${{ github.ref_name }}\n- Commit: ${{ github.sha }}\n- Repo: ${{ github.repository }}\n- Run: https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}"
-          }
-          EOF
-          )
-          curl -X POST -H 'Content-type: application/json' \
-            --data "$payload" \
-            "$SLACK_WEBHOOK_URL"
-
-      - name: Slack notify failure
-        if: failure()
-        env:
-          SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
-        run: |
-          payload=$(cat <<EOF
-          {
-            "text": "[Dialearn] Deploy failed\n- Workflow: ${{ github.workflow }}\n- Branch: ${{ github.ref_name }}\n- Commit: ${{ github.sha }}\n- Repo: ${{ github.repository }}\n- Run: https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}"
-          }
-          EOF
-          )
-          curl -X POST -H 'Content-type: application/json' \
-            --data "$payload" \
-            "$SLACK_WEBHOOK_URL"
