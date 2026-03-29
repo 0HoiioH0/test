@@ -66,29 +66,7 @@ jobs:
           host: ${{ secrets.DEPLOY_HOST }}
           username: ${{ secrets.DEPLOY_USER }}
           key: ${{ secrets.DEPLOY_SSH_KEY }}
-          script_stop: false
           debug: true
           port: ${{ secrets.DEPLOY_PORT || 22 }}
           script: |
-            set -eu
-
-            DEPLOY_PATH="${{ secrets.DEPLOY_PATH }}"
-            if [ -z "$DEPLOY_PATH" ]; then
-              DEPLOY_PATH="/app/dialearn"
-            fi
-
-            cd "$DEPLOY_PATH"
-            docker compose --env-file .env.docker pull
-            docker compose --env-file .env.docker up -d
-            docker compose --env-file .env.docker ps
-
-            for attempt in $(seq 1 20); do
-              if docker exec dialearn-backend python -c "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8000/api/healthz')"; then
-                exit 0
-              fi
-
-              sleep 5
-            done
-
-            docker logs --tail 100 dialearn-backend
-            exit 1
+            cd /d "C:\Users\Administrator\Desktop\지능시스템\backend" && docker compose pull && docker compose up -d
