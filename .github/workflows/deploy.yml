@@ -69,10 +69,4 @@ jobs:
           debug: true
           port: ${{ secrets.DEPLOY_PORT || 22 }}
           script: |
-            # 1. 경로 이동
-            cd /d "C:\Users\Administrator\Desktop\지능시스템\backend" && ^
-            # 2. 도커 로그인 (금고 대신 직접 열쇠 전달)
-            echo ${{ secrets.DOCKERHUB_TOKEN }} | "C:\Program Files\Docker\Docker\resources\bin\docker" login -u ${{ secrets.DOCKERHUB_USERNAME }} --password-stdin && ^
-            # 3. 이미지 풀 및 실행
-            "C:\Program Files\Docker\Docker\resources\bin\docker" compose pull && ^
-            "C:\Program Files\Docker\Docker\resources\bin\docker" compose up -d
+            cd /d "C:\Users\Administrator\Desktop\지능시스템\backend" && echo ${{ secrets.DOCKERHUB_TOKEN }} | "C:\Program Files\Docker\Docker\resources\bin\docker" login -u ${{ secrets.DOCKERHUB_USERNAME }} --password-stdin && "C:\Program Files\Docker\Docker\resources\bin\docker" compose pull && "C:\Program Files\Docker\Docker\resources\bin\docker" compose up -d
