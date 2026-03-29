@@ -12,7 +12,7 @@ permissions:
   contents: read
 
 env:
-  IMAGE_NAME: pressodh/dialearn
+  IMAGE_NAME: 0warigari0/dialearn
 
 jobs:
   build_and_push:
