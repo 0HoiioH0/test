@@ -1,252 +1,122 @@
 # AGENTS.md
-This file is for coding agents working in `backend/`.
 
-## Repository Snapshot
-- Python backend managed with `uv`
-- FastAPI boilerplate with dependency-injector, SQLAlchemy async ORM, Alembic, PostgreSQL, and Valkey
-- Main entrypoint is `main.py`; `create_app()` builds the app and `app` is the ASGI export
-- Main code lives in `app/` and `core/`; tests live in `tests/`; migrations live in `alembic/`
-- Built-in modules include `user`, `auth`, and `file`; treat them as default boilerplate modules, not throwaway samples
-- The project is intended to be reused as a starter template, so prefer generic naming and reusable defaults over product-specific wording
+## 프로젝트 방향
 
-## Source Of Truth
-- Read `pyproject.toml` for Python, Ruff, and pytest settings
-- Read `.github/workflows/ci.yml` for the exact CI commands and required services
-- No Cursor rules were found in `.cursor/rules/` or `.cursorrules`
-- No Copilot instructions were found in `.github/copilot-instructions.md`
-- If those files appear later, merge their repo-specific rules into this file rather than conflicting with them
+이 `v2/` 프로젝트는 기존 기획을 버리고 새 Web 프로젝트로 시작한다. 목표는 인터뷰 용도의 **프로젝트 평가 기능** 하나다.
 
-## Setup And Runtime
-- Install deps: `uv sync`
-- Install dev deps too: `uv sync --all-groups`
-- Python requirement in project metadata: `>=3.13`
-- CI installs Python `3.14.3`; prefer matching CI when possible
-- Copy env if needed: `.env.example` -> `.env`
-- Run dev server: `uv run uvicorn main:app --reload`
-- Quick startup check: `uv run python -c "from main import create_app; create_app()"`
+이 프로젝트의 질문은 항상 다음 기준으로 판단한다.
 
-## Build, Lint, And Format
-- There is no separate build step; treat lint + tests + startup as the quality gate
-- Lint exactly as CI: `uv run ruff check .`
-- Format check exactly as CI: `uv run ruff format --check .`
-- Auto-fix lint when safe: `uv run ruff check . --fix`
-- Format files: `uv run ruff format .`
-- Lint one file: `uv run ruff check path/to/file.py`
-- Format one file: `uv run ruff format path/to/file.py`
+> 지원자가 이 프로젝트를 진짜로 수행했는가?
 
-## Test Commands
-- Run all tests: `uv run pytest`
-- Quiet output: `uv run pytest -q`
-- Stop on first failure: `uv run pytest -x`
-- Run one file: `uv run pytest tests/app/user/application/test_user_service.py`
-- Run one test: `uv run pytest tests/app/user/application/test_user_service.py::test_create_user_success`
-- Run one parametrized case or nested node: `uv run pytest path/to/test_file.py::test_name[case-id]`
-- Run by keyword: `uv run pytest -k create_user`
+기존 manyfast 문서는 앞으로 기획 소스로 사용하지 않는다. 기존 backend/frontend의 강의실, 학생/교수자 역할, 일반 시험 운영, 학교 로그인, 학습 대시보드 같은 도메인도 기본 전제로 삼지 않는다.
 
-## Test Environment
-- `pytest` config is in `pyproject.toml`
-- Async tests use `asyncio_mode = auto`
-- CI starts PostgreSQL and Valkey before `uv run pytest`
-- Useful env for integration-style tests:
-  - `DATABASE_URL=postgresql+asyncpg://postgres:password@127.0.0.1:55432/test_db`
-  - `VALKEY_URL=redis://localhost:6379/0`
-  - `ENVIRONMENT=test`
-- Repository tests and some startup flows likely need those services
-- Many service and API tests can stay isolated with in-memory fakes or monkeypatching
-- Local Docker Compose is available for test dependencies:
-  - Start services: `docker compose up -d`
-  - Check health: `docker compose ps`
-  - Stop and remove volumes: `docker compose down -v`
-  - Container names are `fastapi-hexagonal-boilerplate-postgres` and `fastapi-hexagonal-boilerplate-valkey`
-  - PostgreSQL is exposed on `127.0.0.1:55432`
-  - Valkey is exposed on `127.0.0.1:6379`
-- Before DB-backed test runs, apply migrations with the test env vars set:
-  - `ENVIRONMENT=test DATABASE_URL=postgresql+asyncpg://postgres:password@127.0.0.1:55432/test_db VALKEY_URL=redis://127.0.0.1:6379/0 uv run alembic upgrade head`
+## 핵심 문서
 
-## Alembic And Data Layer Commands
-- Upgrade DB: `uv run alembic upgrade head`
-- Create migration: `uv run alembic revision --autogenerate -m "describe change"`
-- Downgrade one revision: `uv run alembic downgrade -1`
+- `docs/project-evaluation-scope.md`: 제품 범위, MVP 플로우, 도메인 모델, API 초안, 제외 범위
+- `docs/tech-stack.md`: Web 서비스 구현 기술 스택, 아키텍처, 구현 순서
 
-## CI Notes
-- CI workflow file: `.github/workflows/ci.yml`
-- CI order is `lint` then `test`
-- Lint job runs `uv sync`, `uv run ruff check .`, and `uv run ruff format --check .`
-- Test job runs `uv run pytest` with test DB and Valkey env vars
-- Keep local validation aligned with CI unless you have a strong reason not to
+구현 계획을 세우거나 코드를 작성하기 전 이 문서들을 먼저 확인한다.
 
-## Architecture Conventions
-- Preserve the layered structure already in use:
-  - `app/<domain>/domain/` for commands, entities, repository interfaces, and use case interfaces
-  - `app/<domain>/application/` for services, DTOs, and app exceptions
-  - `app/<domain>/adapter/` for API and persistence adapters
-  - `core/` for shared config, DB, framework, and helpers
-- Treat `core/` as technical infrastructure only; do not place classroom, organization, user, auth, enrollment, or other product rules there
-- If logic mentions a domain noun such as classroom, organization, student, professor, membership, invitation, or organization-scoped visibility, it belongs in `app/<domain>/...`, not in `core/`
-- Put reusable technical primitives in `core/`; put reusable business rules in the owning domain, even if multiple endpoints reuse them
-- Keep routers thin and business rules in application services
-- Depend on repository abstractions from services, not directly on SQLAlchemy internals
-- Keep persistence adapters in adapter/output modules, not in services or routers
-- Prefer this boundary for new API work:
-  - `adapter/input/api/v1/request/__init__.py` for HTTP request models
-  - `domain/command/__init__.py` for use-case command models
-  - `domain/usecase/*.py` for use-case interfaces
-  - `adapter/input/api/v1/response/__init__.py` for HTTP response models
-  - `adapter/output/persistence/sqlalchemy/*.py` for concrete SQLAlchemy repositories
-  - `adapter/output/persistence/valkey/*.py` for concrete Valkey repositories when in-memory storage is needed
-  - `application/dto/result.py` only when a non-HTTP use-case output model is actually needed
+## MVP 범위
 
-## Common Vs Domain Logic
-- Common logic means framework wiring, middleware, base request/response types, shared exception plumbing, DB/session helpers, and other cross-domain technical utilities
-- Domain logic means rules tied to business data or vocabulary, such as classroom membership, invited-student visibility, professor/admin authority, organization scoping, and user lifecycle policy
-- If renaming `classroom` or `organization` to another domain would change the rule, that rule is domain logic and must not go into `core/`
-- If code needs `CurrentUser`, `organization_id`, a domain entity, or repository data to decide behavior, prefer `app/<domain>/application` or the owning auth/domain module, not shared infrastructure
-- Keep `core/` generic enough to be reused by multiple domains without knowing business meaning; once a helper encodes product policy, move it out of `core/`
+필요한 기능은 오직 프로젝트 수행 진위 검증이다.
 
-## Imports
-- Follow Ruff/isort ordering: standard library, third-party, then local imports
-- Respect the 80-character limit; use parenthesized multiline imports when needed
-- Avoid wildcard imports
-- Prefer direct imports from defining modules over long re-export chains
+- 지원자가 프로젝트 문서와 코드를 단일 zip 파일로 제출한다.
+- 시스템이 zip 내부 문서와 코드를 분석해 프로젝트 context를 만든다.
+- 시스템이 자료 기반 질문을 생성한다.
+- Streamlit 기반 단계형 인터뷰를 진행한다.
+- 답변을 Bloom’s Taxonomy와 루브릭으로 평가한다.
+- 프로젝트 각 부분별로 상세 분석 리포트를 생성한다.
 
-## Formatting
-- Use Ruff formatting defaults from `pyproject.toml`
-- Line length is `80`
-- Indentation is 4 spaces
-- Quote style is double quotes
-- Let Ruff control wrapping rather than manually aligning code
-- Avoid trailing whitespace and formatting-only churn outside the requested scope
+## 입력 자료
 
-## Typing
-- Add explicit type hints on public functions, methods, and important locals
-- Use modern typing syntax like `str | None`, `list[User]`, and `dict[str, User]`
-- Match the existing modern style, including `type Alias = ...` where useful
-- Keep async repository and service return types precise
-- Prefer strong domain types such as `UUID` internally instead of plain strings
-- Use Pydantic models at request/response boundaries rather than raw dicts
+MVP는 프로젝트 자료를 단일 zip 파일로 받는다.
 
-## Naming
-- Modules are lowercase and domain-oriented
-- Classes use PascalCase
-- Functions, methods, and variables use snake_case
-- Tests use `test_*.py` files and `test_<behavior>` functions
-- API request models use `...Request`, for example `CreateUserRequest`
-- Domain command models use `...Command`, for example `UpdateUserCommand`
-- API response payload models use `...Payload`, for example `UserPayload`
-- API response envelope models use `...Response` and `...ListResponse`, for example `UserResponse` and `UserListResponse`
-- Use case interfaces use `...UseCase`, for example `UserUseCase`
-- Exception classes end with `Exception`
-- Repository interfaces are noun-based, such as `UserRepository`
+zip 내부에는 다음 자료가 포함될 수 있다.
 
-## FastAPI Patterns
-- Define routes under adapter input modules such as `app/.../adapter/input/api/v1/`
-- Use `APIRouter` with explicit `prefix` and `tags`
-- Wire dependencies with `Depends(Provide[...])`
-- Keep shared FastAPI authentication and authorization infrastructure under `core/fastapi/`, not inside a business domain package
-- Route authorization is class-based in `core/fastapi/dependencies/permission.py`
-- Permission classes should inherit from `BasePermission` and implement async `has_permission(request)`
-- Pass permission classes into `PermissionDependency([...])`; do not inline ad hoc role checks in routers
-- Use `dependencies=[Depends(PermissionDependency([...]))]` when a route only needs access gating
-- Use `current_user: CurrentUser = Depends(get_current_user)` when the use case needs actor context after permission gating
-- Keep route-level dependencies generic, such as `IsAuthenticated`, `IsAdmin`, or `IsProfessorOrAdmin`; resource-specific authorization must live in the owning use case/service
-- Do not duplicate resource ownership or membership checks in routers; re-check them inside the application service after loading the target resource
-- Keep HTTP request/response Pydantic models in the API adapter layer, for example `request/__init__.py` and `response/__init__.py`
-- Keep command models in `domain/command/` and pass them from routers to use cases/services
-- Type router dependencies with domain use case interfaces when possible
-- Keep path params strongly typed, for example `user_id: UUID`
-- In typical CRUD flows, convert `Request -> Command` in the router and pass commands to the service
-- In typical CRUD flows, build response payloads directly in the router when mapping is simple and local
-- Do not add simple router helper functions like `_to_payload`, `_build_auth_response`, or similar wrappers when inline mapping is short and local
-- Prefer one single-item response envelope plus one list response envelope per resource over per-method wrappers
-- Avoid classes like `CreateUserResponse` or `DeleteUserResponse` unless the response shapes actually differ
-- Return typed wrapper DTOs instead of loose response dicts when wrappers already exist
+- 프로젝트 소스 코드
+- README
+- PDF 보고서
+- PPTX 발표자료
+- DOCX 설계 문서
+- API 명세
+- 프로젝트 설명 텍스트
 
-## Pydantic Conventions
-- Shared request models inherit from `BaseRequest`
-- `BaseRequest` sets `extra="forbid"`; keep new request schemas strict by default
-- Use `Field(...)` for constraints, patterns, and metadata
-- Use validators for cross-field rules and non-empty update payloads
-- Keep normalization and empty-string/null handling inside schema classes when possible
-- Prefer explicit response fields over leaking domain entities directly through FastAPI
+GitHub URL 직접 분석과 개별 파일 업로드는 v1 범위에서 제외한다.
 
-## Current API Pattern
-- The current preferred pattern is:
-  - request schema in `adapter/input/api/v1/request/__init__.py`
-  - shared authentication/authorization dependency in `core/fastapi/dependencies/permission.py`
-  - command model in `domain/command/__init__.py`
-  - use case interface in `domain/usecase/*.py`
-  - response payload and envelopes in `adapter/input/api/v1/response/__init__.py`
-  - service implementation in `application/service/*.py`
-  - repository port in `domain/repository/*.py`
-  - concrete persistence in `adapter/output/persistence/sqlalchemy/*.py` or `adapter/output/persistence/valkey/*.py`
-  - service returns domain entities unless a dedicated result model is justified
-- A representative naming set is:
-  - `CreateUserRequest`, `UpdateUserRequest`
-  - `CreateUserCommand`, `UpdateUserCommand`
-  - `UserUseCase`
-  - `UserPayload`
-  - `UserResponse`, `UserListResponse`
-- Do not place command models in `application/dto/command.py`
-- Do not place HTTP response models in `application/dto/response.py`
-- Do not place FastAPI request models outside the adapter input layer
-- Compose authorization at the API adapter boundary before calling services/use cases
-- When actor context is needed, pass `CurrentUser` from the router into the use case via `Depends(get_current_user)`; do not re-decode tokens or repeat role checks in routers
-- If a rule depends on both actor and target resource, enforce it in the application service after loading the resource, not in the router
-- If the user intentionally changes an API contract, keep the implementation aligned with that contract and update tests instead of restoring older behavior
-- Auth routes may intentionally `return None` when cookies are the meaningful output; do not restore response bodies unless explicitly requested
-- Do not make application services depend on adapter wrapper classes; depend on domain repository ports directly
-- Add `result.py` only if multiple adapters share the same read model or the service should stop returning entities
+## 유지해야 하는 기존 CLI core 개념
 
-## Domain And Service Conventions
-- Domain entities are dataclass-based and should remain framework-light
-- Value objects belong in domain or shared model layers, not routers
-- The current `User` entity is flat and should stay that way: use direct fields such as `organization_id`, `login_id`, `role`, `email`, `name`, `status`, and `is_deleted`; do not reintroduce nested profile-style value objects for user metadata
-- Application services are async and own business logic
-- Application services own domain authorization beyond basic authentication, such as resource visibility, membership, management authority, and organization-scoped access rules
-- Keep aggregate-specific validation with the aggregate's service; for example, classroom membership and classroom manager checks stay in `app/classroom`, even if they read `UserRepository`
-- Domain/application code may depend on other domain repositories to validate business relationships, but should not move those relationship rules into `core/` just because they are reused
-- Apply `@transactional` to write operations that should commit or roll back atomically
-- Keep read operations simple and avoid transactions unless existing patterns require them
+기존 `cli/` MVP에서 다음 개념과 로직은 이식 대상으로 본다.
 
-## Error Handling
-- Raise app-specific exceptions for expected business failures
-- Reuse `CustomException` subclasses so APIs return consistent `error_code`, `message`, and `detail`
-- Use `404`-style exceptions for missing resources and `400`-style exceptions for business conflicts
-- `IsAuthenticated` failures should raise `AuthUnauthorizedException`; role or permission failures should raise `AuthForbiddenException`
-- Prefer adding reusable permission classes in `core/fastapi/dependencies/permission.py` for shared route-level authorization, and keep resource-specific access failures in application/domain code
-- Use auth exceptions for authentication or coarse authorization failures only; use domain exceptions for state conflicts, invalid membership, and missing domain-linked actors
-- Let FastAPI/Pydantic validation errors flow into the existing `SERVER__REQUEST_VALIDATION_ERROR` handler
-- Do not swallow exceptions silently
-- Roll back DB work on failures inside transactional flows
+- 자료 추출 및 전처리
+- RAG context 구성
+- 질문 생성
+- 답변 평가
+- 꼬리질문 생성
+- Bloom’s Taxonomy 단계 모델
+- 루브릭 기반 평가 모델
+- 최종 리포트 생성
 
-## Database And Persistence
-- Keep DB access async end-to-end
-- Reuse the shared session machinery in `core/db/session.py`
-- Keep ORM table definitions under `core/db/sqlalchemy/models/`
-- Keep ORM mappings and domain mapping concerns in the existing SQLAlchemy mapping modules
-- When schema changes, update models and add an Alembic migration together
-- Preserve optimistic locking/version fields unless a task explicitly changes concurrency behavior
+단, CLI 입출력, 터미널 UI, 일반 학습 평가 흐름은 그대로 복사하지 않는다. Web 프로젝트 목적에 맞게 core 로직만 재구성한다.
 
-## Testing Style
-- Prefer focused unit tests first, especially for service logic
-- For API tests, `TestClient(create_app())` plus monkeypatching is preferred when full integration is unnecessary
-- For repository tests, isolate DB setup and cleanup carefully
-- Assert both status codes and structured error payloads for failure cases
-- Keep fixtures small and local unless there is clear reuse value
-- Cover success paths and relevant failure/conflict cases for new behavior
+## 유지해야 하는 평가 방식
 
-## Editing Guidance
-- Match existing patterns before introducing new abstractions
-- Keep diffs minimal and architecture-consistent
-- Do not broaden scope with unrelated cleanup unless requested
-- If you touch a file, keep imports Ruff-compliant and formatting clean
-- If you add commands or workflows, make sure they work with `uv`
+Bloom’s Taxonomy와 루브릭 기반 평가는 유지한다.
 
-## User-Specific Working Rules
-- Treat ManyFast as the product source of truth when implementing product behavior; re-read it before building domain features that depend on requirements or user flows
-- Use Context7 when the user explicitly requests library/documentation-backed implementation guidance
-- Keep input adapters thin: dependency wiring, request validation/translation, and direct response mapping only
-- Do not put business or resource-specific rules in `adapter/input`; keep them in use cases and application services
-- Avoid reintroducing patterns the user intentionally removed, even if older tests expected them; update tests to match the intended behavior
-- Prefer direct inline response mapping in routers over tiny helper wrappers when the mapping is short and local
-- Follow the established workflow rule: when a task is complete, create a Conventional Commit and push when appropriate for the branch workflow
+- Bloom’s Taxonomy는 질문의 인지 수준과 검증 깊이를 설계하기 위한 기준이다.
+- 루브릭은 답변의 자료 근거 일치도, 구현 구체성, 구조 이해도, 의사결정 이해도, 트러블슈팅 경험, 한계 인식, 답변 일관성을 평가하기 위한 기준이다.
+
+## 최종 리포트 방향
+
+최종 판정은 인터뷰 실무형 표현을 사용한다.
+
+- 검증 통과
+- 추가 확인 필요
+- 신뢰 낮음
+
+리포트는 단순 판정이 아니라 프로젝트 영역별 상세 분석을 포함해야 한다.
+
+- 프로젝트 영역별 신뢰도
+- 질문별 루브릭 점수
+- Bloom 단계별 도달도
+- 자료 근거와 답변의 일치/불일치
+- 의심 지점
+- 강점
+- 추가 확인 질문
+
+## 제외 범위
+
+다음은 MVP에서 제외한다.
+
+- manyfast 기반 기획
+- 강의실
+- 학생/교수자 역할 관리
+- 학교 로그인
+- 일반 시험 생성
+- 성적 관리
+- 학습 대시보드
+- 재응시 정책
+- 관리자 비밀번호 기반 방 관리
+- 복잡한 권한 시스템
+- 화상 감독
+- 여러 지원자 비교
+- 리포트 PDF export
+
+## 구현 전략
+
+권장 전략은 다음과 같다.
+
+```text
+FastAPI backend + Streamlit frontend + SQLite3
++ 기존 CLI의 자료 추출 / 질문 생성 / 평가 / 리포트 core만 이식
+```
+
+기존 backend/frontend에는 불필요한 도메인이 많으므로 그대로 확장하지 않는다. 새 프로젝트 구조를 만들고, `cli/`에서 검증된 core 흐름만 목적에 맞게 가져온다. 캡스톤 시연용 빠른 구현을 위해 PostgreSQL 대신 SQLite3를 사용한다.
+
+## 작업 원칙
+
+- manyfast MCP를 기획 소스로 사용하지 않는다.
+- 새 요구사항은 `docs/project-evaluation-scope.md`와 이 파일에 반영한다.
+- 일반 교육 플랫폼 기능을 추가하지 않는다.
+- 프로젝트 수행 진위 검증에 직접 필요하지 않은 기능은 제외한다.
+- 구현 전 기존 `cli/AGENTS.md`와 `cli/` core 파일을 확인한다.
